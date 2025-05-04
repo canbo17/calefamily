@@ -8,8 +8,15 @@
             🌟 Welcome to CaleFamily! 🌟
         </div>
         <div>
-            {% if 'username' in session %}
+            <!-- {% if 'username' in session %}
                 <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile</a>
+            {% endif %} -->
+            {% if 'username' in session %}
+                <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile 
+                {% if unread_count > 0 %}
+                    <span style="background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">{{ unread_count }}</span>
+                {% endif %}
+                </a>
             {% endif %}
         </div>
     </div>

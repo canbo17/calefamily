@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS reactions (
 )
 ''')
 
+
 # Commit the changes and close the connection
 conn.commit()
 conn.close()

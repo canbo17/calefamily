@@ -1,0 +1,13 @@
+<h1>Reply to Message</h1>
+
+<p><b>Original Message:</b></p>
+<p>{{ original_message_content }}</p>
+
+<form method="POST">
+    <textarea name="message_content" rows="5" cols="40" placeholder="Write your reply..." required></textarea><br><br>
+    <input type="submit" value="Send Reply" style="background-color: #06d6a0; color: white; padding: 10px 15px; border-radius: 10px;">
+</form>
+
+<div style="text-align: right;">
+    <a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
+</div>

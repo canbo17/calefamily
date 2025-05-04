@@ -47,3 +47,17 @@ form {
     padding: 20px;
     margin-bottom: 20px;
 }
+
+.unread {
+    font-weight: bold;
+    background-color: #f8f9fa;
+}
+
+.notification-badge {
+    background-color: #ef476f;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    margin-left: 5px;
+}

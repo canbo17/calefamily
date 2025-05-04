@@ -1,23 +1,25 @@
-<a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
+<div style="text-align: right;">
+    <a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
+</div>
 
-<h1>Inbox</h1>
 
 <table border="1">
     <tr>
         <th>Sender</th>
         <th>Message</th>
         <th>Timestamp</th>
-        <th>Action</th>
+        <th>Actions</th>
     </tr>
     {% for message in messages %}
-        <tr>
-            <td>{{ message[0] }}</td>  <!-- Sender -->
-            <td style="font-weight: {% if message[3] == 0 %}bold{% else %}normal{% endif %};">{{ message[1] }}</td>  <!-- Message content -->
-            <td>{{ message[2] }}</td>  <!-- Timestamp -->
+        <tr style="font-weight: {% if message[4] %}normal{% else %}bold{% endif %}">
+            <td>{{ message[1] }}</td>
+            <td>{{ message[2] }}</td>
+            <td>{{ message[3] }}</td>
             <td>
-                <a href="{{ url_for('mark_as_read', message_id=message[3]) }}">Mark as read</a>
+                <a href="{{ url_for('mark_as_read', message_id=message[0]) }}">Mark Read</a> |
+                <a href="{{ url_for('deleted_messages', message_id=message[0]) }}">Delete</a> |
+                <a href="{{ url_for('respond_to_message', message_id=message[0]) }}">Reply</a>
             </td>
         </tr>
     {% endfor %}
 </table>
-

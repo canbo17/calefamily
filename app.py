@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import sqlite3
 import os
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -86,7 +87,18 @@ def home():
         {'name': 'Calenrichment', 'emoji': '🎨'},
         {'name': 'Calespañol', 'emoji': '🗣️'}
     ]
-    return render_template('home.html', subcales=subcales)
+    unread_count = 0
+    if 'user_id' in session:
+        conn = sqlite3.connect('calefamily.db')
+        c = conn.cursor()
+        c.execute('SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_read = 0 AND deleted = 0', 
+                 (session['user_id'],))
+        unread_count = c.fetchone()[0]
+        conn.close()
+
+    return render_template('home.html', 
+                         subcales=subcales,
+                         unread_count=unread_count)
 
 # Register
 @app.route('/register', methods=['GET', 'POST'])
@@ -381,7 +393,7 @@ def profile():
     
     conn = sqlite3.connect('calefamily.db')
     c = conn.cursor()
-    c.execute('SELECT username, profile_pic, zodiac_sign, birth_year, favorite_color, favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book FROM users WHERE id = ?', (session['user_id'],))
+    c.execute('SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book FROM users WHERE id = ?', (session['user_id'],))
     user = c.fetchone()
 
     # Get unread message count
@@ -452,7 +464,7 @@ def user_profile(user_id):
     conn = sqlite3.connect('calefamily.db')
     c = conn.cursor()
     c.execute('''
-        SELECT username, profile_pic, zodiac_sign, birth_year, favorite_color, 
+        SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, 
                favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book 
         FROM users 
         WHERE id = ?
@@ -466,71 +478,88 @@ def user_profile(user_id):
     
     return render_template('user_profile.html', user=user)
 
-def view_user_profile(user_id):
-    if 'user_id' not in session:
-        return redirect('/login')
+# def view_user_profile(user_id):
+#     if 'user_id' not in session:
+#         return redirect('/login')
 
+#     conn = sqlite3.connect('calefamily.db')
+#     c = conn.cursor()
+#     c.execute('SELECT username, profile_pic, zodiac_sign, birth_year, favorite_color, favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book FROM users WHERE id = ?', (user_id,))
+#     user = c.fetchone()
+#     conn.close()
+
+#     return render_template('user_profile.html', user=user)
+
+@app.route('/send/<int:recipient_id>', methods=['GET', 'POST'])
+def send_messages(recipient_id):
     conn = sqlite3.connect('calefamily.db')
     c = conn.cursor()
-    c.execute('SELECT username, profile_pic, zodiac_sign, birth_year, favorite_color, favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book FROM users WHERE id = ?', (user_id,))
-    user = c.fetchone()
-    conn.close()
 
-    return render_template('user_profile.html', user=user)
+    # Optional: fetch original message if this is a reply
+    original_message_content = request.args.get('original')
 
-@app.route('/send_messages/<recipient_id>', methods=['GET', 'POST'])
-def send_messages(recipient_id):
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    # Handle message composition (POST request)
     if request.method == 'POST':
         content = request.form['message_content']
+        sender_id = session['user_id']  # Assuming you store the current user in session
 
-        # Save message to database
-        conn = sqlite3.connect('calefamily.db')
-        c = conn.cursor()
-        c.execute('INSERT INTO messages (sender_id, recipient_id, content) VALUES (?, ?, ?)', 
-                  (session['user_id'], recipient_id, content))
-        
-        # Optional: add a "read" flag for future use (for inbox management)
+        # Get recipient info (we assume recipient_id is passed in the URL)
+        recipient_id = recipient_id  # It's passed directly as part of the route, no need to fetch username
+
+        # Insert the new message into the database
+        c.execute('''
+            INSERT INTO messages (sender_id, recipient_id, content, timestamp)
+            VALUES (?, ?, ?, ?)
+        ''', (sender_id, recipient_id, content, datetime.now()))
+
         conn.commit()
-        conn.close()
+        return redirect(url_for('send_messages', recipient_id=recipient_id))
 
-        # Redirect user back to inbox after sending message
-        return redirect('/inbox')
+    # Get sent messages (sent by the current user to this recipient)
+    c.execute('''
+        SELECT u.username, m.content, m.timestamp
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.sender_id = ? AND m.recipient_id = ?
+        ORDER BY m.timestamp DESC
+    ''', (session['user_id'], recipient_id))
+    messages = c.fetchall()
 
-    # If GET request, show the message form
-    conn = sqlite3.connect('calefamily.db')
-    c = conn.cursor()
+    # Get recipient username
     c.execute('SELECT username FROM users WHERE id = ?', (recipient_id,))
     recipient = c.fetchone()
-    conn.close()
+    if recipient:
+        recipient_username = recipient[0]
+    else:
+        return "Recipient not found", 404
 
-    if not recipient:
-        return "User not found."
-
-    # Pass recipient id to the template for message composition
-    return render_template('send_messages.html', recipient=recipient[0], recipient_id=recipient_id)
-
+    return render_template('send_messages.html',
+                           messages=messages,
+                           recipient=recipient_username,
+                           recipient_id=recipient_id,
+                           original_message_content=original_message_content)
 @app.route('/inbox')
 def inbox():
-    if 'user_id' not in session:
-        return redirect('/login')
-
-    conn = sqlite3.connect('calefamily.db')
+    conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute('''
-        SELECT users.username, messages.content, messages.timestamp, messages.is_read
-        FROM messages
-        JOIN users ON messages.sender_id = users.id
-        WHERE messages.recipient_id = ? AND messages.is_read = 0
-        ORDER BY messages.timestamp DESC
-    ''', (session['user_id'],))
-    unread_messages = c.fetchall()
-    conn.close()
 
-    return render_template('inbox.html', messages=unread_messages)
+    # Get all non-deleted messages sent to the current user
+    c.execute('''
+        SELECT m.id, u.username, m.content, m.timestamp, m.is_read, m.sender_id
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.recipient_id = ? AND m.deleted = 0
+        ORDER BY m.timestamp DESC
+    ''', (session['user_id'],))
+    messages = c.fetchall()
+
+    # Optional: Count unread messages for display
+    c.execute('''
+        SELECT COUNT(*) FROM messages
+        WHERE recipient_id = ? AND is_read = 0 AND deleted = 0
+    ''', (session['user_id'],))
+    unread_count = c.fetchone()[0]
+
+    return render_template('inbox.html', messages=messages, unread_count=unread_count)
 
 @app.route('/deleted_messages')
 def deleted_messages():
@@ -558,28 +587,38 @@ def mark_as_read(message_id):
 
     conn = sqlite3.connect('calefamily.db')
     c = conn.cursor()
-    c.execute('UPDATE messages SET is_read = 1 WHERE id = ? AND recipient_id = ?', (message_id, session['user_id']))
+    c.execute('UPDATE messages SET is_read = 1 WHERE id = ? AND recipient_id = ?', 
+             (message_id, session['user_id']))
     conn.commit()
     conn.close()
+    
+    return redirect(url_for('inbox'))
 
-    return redirect('/inbox')
-
-def add_message_flags():
+@app.route('/respond/<int:message_id>', methods=['GET', 'POST'])
+def respond_to_message(message_id):
     conn = sqlite3.connect('calefamily.db')
+    conn.row_factory = sqlite3.Row  # Add this line
     c = conn.cursor()
-    
-    # Check if 'read' column exists
-    c.execute("PRAGMA table_info(messages)")
-    columns = [column[1] for column in c.fetchall()]
-    
-    if 'read' not in columns:
-        c.execute('ALTER TABLE messages ADD COLUMN read INTEGER DEFAULT 0')  # 0 for unread, 1 for read
-    
-    if 'deleted' not in columns:
-        c.execute('ALTER TABLE messages ADD COLUMN deleted INTEGER DEFAULT 0')  # 0 for not deleted, 1 for deleted
-    
-    conn.commit()
-    conn.close()
+
+    # Get the original message
+    c.execute("SELECT * FROM messages WHERE id = ?", (message_id,))
+    original = c.fetchone()
+
+    if request.method == 'POST':
+        #response_text = request.form['response']
+        response_text = request.form['message_content']
+        sender_id = original['recipient_id']  # The original recipient becomes the sender
+        recipient_id = original['sender_id']  # The original sender becomes the recipient
+
+        c.execute('''
+            INSERT INTO messages (sender_id, recipient_id, content, is_read)
+            VALUES (?, ?, ?, 0)
+        ''', (sender_id, recipient_id, response_text))
+
+        conn.commit()  # Use conn not db
+        return redirect(url_for('inbox'))
+
+    return render_template('respond.html', message=original)
 
 if __name__ == '__main__':
     init_db()
