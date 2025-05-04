@@ -1,0 +1,13 @@
+<h1>CaleEngineers 🛠️</h1>
+
+<a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
+
+<ul>
+    {% for user in users %}
+        <li>
+            <a href="{{ url_for('user_profile', user_id=user[0]) }}">{{ user[1] }}</a>
+            <a href="{{ url_for('send_messages', recipient_id=user[0]) }}" 
+               style="background-color: #06d6a0; padding: 5px 10px; border-radius: 10px; color: white; text-decoration: none;">✉️ Send Message</a>
+        </li>
+    {% endfor %}
+</ul>

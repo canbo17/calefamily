@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Comment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Comment</h2>
+        <form method="POST" action="{{ url_for('edit_comment', comment_id=comment_id) }}">
+            <textarea name="comment" rows="5" cols="60">{{ comment }}</textarea>
+            <br>
+            <button type="submit">Save</button>
+            <!-- Cancel goes back to the subcale page -->
+            <a href="{{ url_for('subcale', subcale_name=subcale_name) }}">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

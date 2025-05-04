@@ -1,0 +1,23 @@
+<a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
+
+<h1>Inbox</h1>
+
+<table border="1">
+    <tr>
+        <th>Sender</th>
+        <th>Message</th>
+        <th>Timestamp</th>
+        <th>Action</th>
+    </tr>
+    {% for message in messages %}
+        <tr>
+            <td>{{ message[0] }}</td>  <!-- Sender -->
+            <td style="font-weight: {% if message[3] == 0 %}bold{% else %}normal{% endif %};">{{ message[1] }}</td>  <!-- Message content -->
+            <td>{{ message[2] }}</td>  <!-- Timestamp -->
+            <td>
+                <a href="{{ url_for('mark_as_read', message_id=message[3]) }}">Mark as read</a>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+

@@ -1,0 +1,16 @@
+<h1>Deleted Messages</h1>
+
+<table border="1">
+    <tr>
+        <th>Sender</th>
+        <th>Message</th>
+        <th>Timestamp</th>
+    </tr>
+    {% for message in messages %}
+        <tr>
+            <td>{{ message[0] }}</td>  <!-- Sender Username -->
+            <td>{{ message[1] }}</td>  <!-- Message Content -->
+            <td>{{ message[2] }}</td>  <!-- Timestamp -->
+        </tr>
+    {% endfor %}
+</table>

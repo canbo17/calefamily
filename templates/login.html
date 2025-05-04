@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #ffd166;">
+        <div>
+            🌟 Welcome to CaleFamily! 🌟
+        </div>
+        <div>
+            {% if 'username' in session %}
+                <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile</a>
+            {% endif %}
+        </div>
+    </div>
+</head>
+<body>
+    <h1>Login</h1>
+    <form method="POST">
+        Username: <input type="text" name="username" required><br><br>
+        Password: <input type="password" name="password" required><br><br>
+        <input type="submit" value="Login">
+    </form>
+</body>
+</html>

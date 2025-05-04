@@ -1,0 +1,25 @@
+<h1>{{ user[0] }}'s Profile</h1>
+
+<p><b>Profile Picture:</b> {{ user[1] }}</p>
+<p><b>Zodiac Sign:</b> {{ user[2] }}</p>
+<p><b>Birth Year:</b> {{ user[3] }}</p>
+<p><b>Favorite Color:</b> {{ user[4] }}</p>
+<p><b>Favorite Animal:</b> {{ user[5] }}</p>
+<p><b>Favorite Subject:</b> {{ user[6] }}</p>
+<p><b>Favorite Hobby:</b> {{ user[7] }}</p>
+<p><b>Favorite Movie:</b> {{ user[8] }}</p>
+<p><b>Favorite Book:</b> {{ user[9] }}</p>
+
+<!-- Mailbox Link (Only visible for the logged-in user) -->
+<a href="{{ url_for('inbox') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">📬 Mailbox ({{ unread_count }})</a>
+
+
+<!-- Back to CaleEngineers -->
+<a href="{{ url_for('calengineers') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🛠️ Back to CaleEngineers</a>
+
+<h3>Messages</h3>
+<ul>
+    <li><a href="{{ url_for('inbox') }}">Inbox</a></li>
+    <li><a href="{{ url_for('send_messages', recipient_id=user[0]) }}">Send Message</a></li>
+    <li><a href="{{ url_for('deleted_messages') }}">Deleted Messages</a></li>
+</ul>

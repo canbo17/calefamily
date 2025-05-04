@@ -1,0 +1,33 @@
+<h1>Sent Messages</h1>
+
+<table border="1">
+    <tr>
+        <th>Recipient</th>
+        <th>Message</th>
+        <th>Timestamp</th>
+    </tr>
+    {% for message in messages %}
+        <tr>
+            <td>{{ message[0] }}</td>  <!-- Recipient Username -->
+            <td>{{ message[1] }}</td>  <!-- Message Content -->
+            <td>{{ message[2] }}</td>  <!-- Timestamp -->
+        </tr>
+    {% endfor %}
+</table>
+
+<h1>Send Message to {{ recipient }}</h1>
+
+<form method="POST" action="{{ url_for('send_messages', recipient_id=recipient_id) }}">
+    <textarea name="message_content" rows="5" cols="40" placeholder="Write your message..." required></textarea><br><br>
+    <input type="submit" value="Send Message" style="background-color: #06d6a0; color: white; padding: 10px 15px; border-radius: 10px;">
+</form>
+
+<h1>Reply to Message</h1>
+
+<p><b>Original Message:</b></p>
+<p>{{ original_message_content }}</p>
+
+<form method="POST" action="{{ url_for('send_messages', recipient_id=recipient_id) }}">
+    <textarea name="message_content" rows="5" cols="40" placeholder="Write your reply..." required></textarea><br><br>
+    <input type="submit" value="Send Message" style="background-color: #06d6a0; color: white; padding: 10px 15px; border-radius: 10px;">
+</form>

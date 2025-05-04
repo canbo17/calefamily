@@ -1,0 +1,31 @@
+<h1>Edit Your Profile</h1>
+
+<form method="POST">
+    <b>Select Your Profile Picture:</b><br><br>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+        {% for emoji in ['🐵', '🐶', '🐱', '🐰', '🦊', '🐻', '🐼', '🐯', '🦁', '🐸', '🐙', '🐢', '🦄', '🐝', '🐧', '🐳', '🐥', '🦋'] %}
+            <label style="font-size: 2em; cursor: pointer;">
+                <input type="radio" name="profile_pic" value="{{ emoji }}" {% if user[0] == emoji %}checked{% endif %} style="display: none;">
+                {{ emoji }}
+            </label>
+        {% endfor %}
+    </div>
+
+    <br>
+    Zodiac Sign: 
+    <select name="zodiac_sign">
+        <option>Aries ♈</option><option>Taurus ♉</option><option>Gemini ♊</option><option>Cancer ♋</option>
+        <option>Leo ♌</option><option>Virgo ♍</option><option>Libra ♎</option><option>Scorpio ♏</option>
+        <option>Sagittarius ♐</option><option>Capricorn ♑</option><option>Aquarius ♒</option><option>Pisces ♓</option>
+    </select><br><br>
+    Birth Year: <input type="number" name="birth_year" value="{{ user[2] }}"><br><br>
+    Favorite Color: <input type="text" name="favorite_color" value="{{ user[3] }}"><br><br>
+    Favorite Animal: <input type="text" name="favorite_animal" value="{{ user[4] }}"><br><br>
+    Favorite Subject: <input type="text" name="favorite_subject" value="{{ user[5] }}"><br><br>
+    Favorite Hobby: <input type="text" name="favorite_hobby" value="{{ user[6] }}"><br><br>
+    Favorite Movie: <input type="text" name="favorite_movie" value="{{ user[7] }}"><br><br>
+    Favorite Book: <input type="text" name="favorite_book" value="{{ user[8] }}"><br><br>
+
+    <input type="submit" value="Save Profile">
+</form>
