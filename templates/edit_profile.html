@@ -14,11 +14,15 @@
 
     <br>
     Zodiac Sign: 
+    Zodiac Sign: 
     <select name="zodiac_sign">
-        <option>Aries ♈</option><option>Taurus ♉</option><option>Gemini ♊</option><option>Cancer ♋</option>
-        <option>Leo ♌</option><option>Virgo ♍</option><option>Libra ♎</option><option>Scorpio ♏</option>
-        <option>Sagittarius ♐</option><option>Capricorn ♑</option><option>Aquarius ♒</option><option>Pisces ♓</option>
-    </select><br><br>
+        {% set zodiac_options = ['Aries ♈', 'Taurus ♉', 'Gemini ♊', 'Cancer ♋',
+                                 'Leo ♌', 'Virgo ♍', 'Libra ♎', 'Scorpio ♏',
+                                 'Sagittarius ♐', 'Capricorn ♑', 'Aquarius ♒', 'Pisces ♓'] %}
+        {% for sign in zodiac_options %}
+            <option value="{{ sign }}" {% if user[1] == sign %}selected{% endif %}>{{ sign }}</option>
+        {% endfor %}
+    </select> <br><br>
     Birth Year: <input type="number" name="birth_year" value="{{ user[2] }}"><br><br>
     Favorite Color: <input type="text" name="favorite_color" value="{{ user[3] }}"><br><br>
     Favorite Animal: <input type="text" name="favorite_animal" value="{{ user[4] }}"><br><br>

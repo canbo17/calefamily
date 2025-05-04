@@ -1,14 +1,14 @@
 <h1>{{ user[1] }}'s Profile</h1>
 
-<p><b>Profile Picture:</b> {{ user[2] }}</p>
-<p><b>Zodiac Sign:</b> {{ user[3] }}</p>
-<p><b>Birth Year:</b> {{ user[4] }}</p>
-<p><b>Favorite Color:</b> {{ user[5] }}</p>
-<p><b>Favorite Animal:</b> {{ user[6] }}</p>
-<p><b>Favorite Subject:</b> {{ user[7] }}</p>
-<p><b>Favorite Hobby:</b> {{ user[8] }}</p>
-<p><b>Favorite Movie:</b> {{ user[9] }}</p>
-<p><b>Favorite Book:</b> {{ user[10] }}</p>
+    <p><b>Profile Picture:</b> {{ user[2] }}</p>
+    <p><b>Zodiac Sign:</b> {{ user[3] }}</p>
+    <p><b>Birth Year:</b> {{ user[4] }}</p>
+    <p><b>Favorite Color:</b> {{ user[5] }}</p>
+    <p><b>Favorite Animal:</b> {{ user[6] }}</p>
+    <p><b>Favorite Subject:</b> {{ user[7] }}</p>
+    <p><b>Favorite Hobby:</b> {{ user[8] }}</p>
+    <p><b>Favorite Movie:</b> {{ user[9] }}</p>
+    <p><b>Favorite Book:</b> {{ user[10] }}</p>
 
 <!-- Mailbox Link (Only visible for the logged-in user) -->
 <a href="{{ url_for('inbox') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">📬 Mailbox ({{ unread_count }})</a>
@@ -23,3 +23,4 @@
     <li><a href="{{ url_for('send_messages', recipient_id=user[0]) }}">Send Message</a></li>
     <li><a href="{{ url_for('deleted_messages') }}">Deleted Messages</a></li>
 </ul>
+

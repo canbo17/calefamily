@@ -455,28 +455,28 @@ def calengineers():
 
     return render_template('calengineers.html', users=users)
 
-@app.route('/user_profile/<int:user_id>')
-def user_profile(user_id):
-    if 'user_id' not in session:
-        return redirect('/login')
+# @app.route('/user_profile/<int:user_id>')
+# def user_profile(user_id):
+#     if 'user_id' not in session:
+#         return redirect('/login')
 
-    # Fetch the user's profile details
-    conn = sqlite3.connect('calefamily.db')
-    c = conn.cursor()
-    c.execute('''
-        SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, 
-               favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book 
-        FROM users 
-        WHERE id = ?
-    ''', (user_id,))
-    user = c.fetchone()
-    conn.close()
+#     # Fetch the user's profile details
+#     conn = sqlite3.connect('calefamily.db')
+#     c = conn.cursor()
+#     c.execute('''
+#         SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, 
+#                favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book 
+#         FROM users 
+#         WHERE id = ?
+#     ''', (user_id,))
+#     user = c.fetchone()
+#     conn.close()
 
-    # If the user doesn't exist or the session doesn't match, redirect
-    if not user:
-        return "User not found"
+#     # If the user doesn't exist or the session doesn't match, redirect
+#     if not user:
+#         return "User not found"
     
-    return render_template('user_profile.html', user=user)
+#     return render_template('user_profile.html', user=user)
 
 # def view_user_profile(user_id):
 #     if 'user_id' not in session:
