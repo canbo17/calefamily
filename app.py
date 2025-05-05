@@ -455,28 +455,28 @@ def calengineers():
 
     return render_template('calengineers.html', users=users)
 
-# @app.route('/user_profile/<int:user_id>')
-# def user_profile(user_id):
-#     if 'user_id' not in session:
-#         return redirect('/login')
+@app.route('/user_profile/<int:user_id>')
+def user_profile(user_id):
+    if 'user_id' not in session:
+        return redirect('/login')
 
-#     # Fetch the user's profile details
-#     conn = sqlite3.connect('calefamily.db')
-#     c = conn.cursor()
-#     c.execute('''
-#         SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, 
-#                favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book 
-#         FROM users 
-#         WHERE id = ?
-#     ''', (user_id,))
-#     user = c.fetchone()
-#     conn.close()
+    # Fetch the user's profile details
+    conn = sqlite3.connect('calefamily.db')
+    c = conn.cursor()
+    c.execute('''
+        SELECT id, username, profile_pic, zodiac_sign, birth_year, favorite_color, 
+               favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book 
+        FROM users 
+        WHERE id = ?
+    ''', (user_id,))
+    user = c.fetchone()
+    conn.close()
 
-#     # If the user doesn't exist or the session doesn't match, redirect
-#     if not user:
-#         return "User not found"
+    # If the user doesn't exist or the session doesn't match, redirect
+    if not user:
+        return "User not found"
     
-#     return render_template('user_profile.html', user=user)
+    return render_template('user_profile.html', user=user)
 
 # def view_user_profile(user_id):
 #     if 'user_id' not in session:
@@ -619,6 +619,31 @@ def respond_to_message(message_id):
         return redirect(url_for('inbox'))
 
     return render_template('respond.html', message=original)
+
+# Each subcale html definition
+@app.route('/calecho')
+def calecho():
+    return render_template('calecho.html', subcale_name='calecho')
+
+@app.route('/calexplore')
+def calexplore():
+    return render_template('calexplore.html', subcale_name='calexplore')
+
+@app.route('/calentertainment')
+def calentertainment():
+    return render_template('calentertainment.html', subcale_name='calentertainment')
+
+@app.route('/calenrichment')
+def calenrichment():
+    return render_template('calenrichment.html', subcale_name='calenrichment')
+
+@app.route('/caleducation')
+def caleducation():
+    return render_template('caleducation.html', subcale_name='caleducation')
+
+@app.route('/calespanol')
+def calespanol():
+    return render_template('calespanol.html', subcale_name='calespanol')
 
 if __name__ == '__main__':
     init_db()

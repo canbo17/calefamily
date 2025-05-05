@@ -15,6 +15,22 @@
     </div>
 </head>
 <body>
+    {% set subcale_images = {
+        'caleducation': 'caleducation.jpg',
+        'caleengineers': 'caleengineers.jpg',
+        'calentertainment': 'calentertainment.jpg',
+        'calecho': 'calecho.jpg',
+        'calexplore': 'calexplore.jpg',
+        'calenrichment': 'calenrichment.jpg',
+        'calespanol': 'calespanol.jpg'
+    } %}
+    
+    <h1>{{ subcale_name }}</h1>
+    
+    <!-- Display image for the current subcale -->
+    <img class="subcale-banner" src="{{ url_for('static', filename='images/' + subcale_images[subcale_name.lower()|replace('ñ', 'n')]) }}" alt="{{ subcale_name }} image">    
+
+
     <h1>{{ subcale_name }}</h1>
     <a href="/">Back to Home</a><br><br>
 

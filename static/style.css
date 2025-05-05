@@ -61,3 +61,13 @@ form {
     font-size: 12px;
     margin-left: 5px;
 }
+
+img.subcale-banner {
+    display: block;
+    margin: 20px auto;       /* centers the image */
+    width: 80%;              /* scales the image width */
+    max-width: 300px;        /* optional: max width cap */
+    height: auto;            /* keeps aspect ratio */
+    border-radius: 16px;     /* optional: rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* optional: subtle shadow */
+}
