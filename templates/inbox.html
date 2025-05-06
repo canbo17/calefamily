@@ -1,25 +1,47 @@
-<div style="text-align: right;">
-    <a href="{{ url_for('home') }}" style="background-color: #118ab2; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🏡 Go Home</a>
-</div>
+{% extends 'base.html' %}
 
+{% block title %}Inbox – CaleFamily{% endblock %}
 
-<table border="1">
-    <tr>
+{% block body %}
+
+  <nav class="message-tabs" style="margin-bottom:1em;">
+    <a href="{{ url_for('inbox') }}">
+      📥 Inbox{% if unread_count > 0 %} ({{ unread_count }}){% endif %}
+    </a> |
+    <a href="{{ url_for('sent_messages') }}">✉️ Sent</a> |
+    <a href="{{ url_for('deleted_messages') }}">🗑️ Deleted</a> |
+    <a href="{{ url_for('home') }}">🏠 Home</a>
+  </nav>
+  <hr>
+
+  <table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <thead>
+      <tr>
         <th>Sender</th>
         <th>Message</th>
         <th>Timestamp</th>
         <th>Actions</th>
-    </tr>
-    {% for message in messages %}
-        <tr style="font-weight: {% if message[4] %}normal{% else %}bold{% endif %}">
-            <td>{{ message[1] }}</td>
-            <td>{{ message[2] }}</td>
-            <td>{{ message[3] }}</td>
-            <td>
-                <a href="{{ url_for('mark_as_read', message_id=message[0]) }}">Mark Read</a> |
-                <a href="{{ url_for('deleted_messages', message_id=message[0]) }}">Delete</a> |
-                <a href="{{ url_for('respond_to_message', message_id=message[0]) }}">Reply</a>
-            </td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in messages %}
+        <tr class="{% if not m['is_read'] %}unread{% endif %}">
+          <td>{{ m['sender'] }}</td>
+          <td>{{ m['content']|safe }}</td>
+          <td>{{ m['timestamp'] }}</td>
+          <td>
+            {% if not m['is_read'] %}
+              <a href="{{ url_for('mark_as_read', message_id=m['id']) }}">Mark Read</a> |
+            {% endif %}
+            <a href="{{ url_for('delete_message', message_id=m['id']) }}">Delete</a> |
+            <a href="{{ url_for('respond_to_message', message_id=m['id']) }}">Reply</a>
+          </td>
         </tr>
-    {% endfor %}
-</table>
+      {% else %}
+        <tr>
+          <td colspan="4" style="text-align:center;">No messages in your inbox.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

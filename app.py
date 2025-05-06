@@ -1,12 +1,82 @@
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, flash, session, g
 import sqlite3
 import os
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import Blueprint
+
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = os.environ.get('SECRET_KEY', 'dev‐only‐change‐me')
 
 DB_FILE = 'calefamily.db'
+
+# Path to your SQLite file
+DB_FILE = os.path.join(os.path.dirname(__file__), 'calefamily.db')
+
+def get_db():
+    """
+    Returns a sqlite3.Connection, stored on flask.g for reuse per request.
+    """
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_FILE)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    """
+    Closes the database at the end of the request.
+    """
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+# Helper to execute queries
+def query_db(query, args=(), one=False):
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute(query, args)
+    rv = cur.fetchall()
+    conn.commit()
+    conn.close()
+    return (rv[0] if rv else None) if one else rv
+
+# Password hashing helpers
+def hash_password(password):
+    return generate_password_hash(password)
+
+def check_password(password, hashed):
+    return check_password_hash(hashed, password)
+
+# Notification helper
+def notify_user(recipient_id, message, notif_type='registration'):
+    # If the payload is just a string, treat it as a normal notification
+    if isinstance(message, str) or notif_type != 'registration':
+        db = get_db()
+        db.execute(
+            "INSERT INTO notifications (recipient, type, payload) VALUES (?, ?, ?)",
+            (recipient_id, notif_type, message)
+        )
+        db.commit()
+        return
+
+    # Otherwise, it’s a structured registration request
+    approve_url = url_for('admin.approve_registration', user_id=message['pending_id'])
+    deny_url    = url_for('admin.deny_registration',    user_id=message['pending_id'])
+    content = (
+      f"New registration request: <b>{message['username']}</b><br>"
+      f"<a href='{approve_url}'>✅ Approve</a> | "
+      f"<a href='{deny_url}'>❌ Deny</a>"
+    )
+    db = get_db()
+    db.execute(
+        "INSERT INTO messages (sender_id, recipient_id, content) VALUES (?, ?, ?)",
+        (0, recipient_id, content)
+    )
+    db.commit()
+
 
 # Ensure database exists
 def init_db():
@@ -79,6 +149,7 @@ def init_db():
 # Home page
 @app.route('/')
 def home():
+    # 1 Existing subcales
     subcales = [
         {'name': 'Caleducation', 'emoji': '📚'},
         {'name': 'Calecho', 'emoji': '🎵'},
@@ -87,69 +158,177 @@ def home():
         {'name': 'Calenrichment', 'emoji': '🎨'},
         {'name': 'Calespañol', 'emoji': '🗣️'}
     ]
+    # 2) Default unread‑message count
     unread_count = 0
-    if 'user_id' in session:
+
+    # 3) If logged in, open the DB and count unread messages
+    user_id = session.get('user_id')
+    if user_id:
         conn = sqlite3.connect('calefamily.db')
-        c = conn.cursor()
-        c.execute('SELECT COUNT(*) FROM messages WHERE recipient_id = ? AND is_read = 0 AND deleted = 0', 
-                 (session['user_id'],))
-        unread_count = c.fetchone()[0]
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) 
+              FROM messages 
+             WHERE recipient_id = ? 
+               AND is_read      = 0 
+               AND deleted      = 0
+            """,
+            (user_id,)
+        )
+        # fetchone()[0] yields the integer count
+        unread_count = cursor.fetchone()[0] or 0
         conn.close()
 
-    return render_template('home.html', 
-                         subcales=subcales,
-                         unread_count=unread_count)
+    # 4) Render with the unread_count in your context
+    return render_template(
+        'home.html',
+        subcales=subcales,
+        unread_count=unread_count
+    )
 
 # Register
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        confirm = request.form['confirm']
+        # 1) Extract & sanitize inputs
+        username = request.form.get('username', '').strip()
+        first    = request.form.get('first',    '').strip()
+        last     = request.form.get('last',     '').strip()
+        password = request.form.get('password', '')
+        confirm  = request.form.get('confirm',  '')
+
+        # 2) Basic validation
+        if not (username and first and last and password and confirm):
+            flash('All fields are required.', 'error')
+            return redirect(url_for('register'))
 
         if password != confirm:
-            return "Passwords do not match."
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('register'))
 
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        try:
-            c.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, password))
-            conn.commit()
-        except sqlite3.IntegrityError:
-            return "Username already exists."
-        finally:
-            conn.close()
+        # Enforce only a 4‑character minimum
+        if len(password) < 4:
+            flash('Password must be at least 4 characters long.', 'error')
+            return redirect(url_for('register'))
 
-        return redirect('/login')
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return redirect(url_for('register'))
+
+        # 3) Uniqueness check
+        existing = query_db(
+            "SELECT id FROM users WHERE username = ?",
+            (username,),
+            one=True
+        )
+        if existing:
+            flash('That username is already taken.', 'error')
+            return redirect(url_for('register'))
+
+        # 4) Hash & insert pending user
+        pw_hash = hash_password(password)
+        query_db(
+            """
+            INSERT INTO users
+              (username, password, first, last, is_approved)
+            VALUES
+              (?,        ?,        ?,     ?,    0)
+            """,
+            (username, pw_hash, first, last)
+        )
+
+        # 5) Grab the new user's id
+        new_user = query_db(
+            "SELECT id FROM users WHERE username = ?",
+            (username,),
+            one=True        
+        )
+        user_id = new_user['id']
+
+        # 6) Notify all admins
+        admins = query_db("SELECT id FROM users WHERE is_admin = 1")
+        new_user = {'pending_id': user_id, 'username': username, 'First': first, 'Last': last,  }
+        for a in admins:
+            print(f"DEBUG register → notifying admin_id={a['id']} about new user {username}")
+            notify_user(
+                a['id'],new_user, notif_type='registration')
+        print("DEBUG register → done notify_user calls")
+        flash('Registration submitted and pending approval.', 'info')
+        return redirect(url_for('login'))
+
+    # GET request just renders the form
     return render_template('register.html')
 
-# Login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form.get('username','').strip()
+        password = request.form.get('password','')
 
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute('SELECT id FROM users WHERE username = ? AND password = ?', (username, password))
-        user = c.fetchone()
-        conn.close()
+        # Fetch the user row
+        user = query_db(
+            "SELECT * FROM users WHERE username = ?",
+            (username,),
+            one=True
+        )
 
-        if user:
-            session['user_id'] = user[0]
-            session['username'] = username
-            return redirect('/')
-        else:
-            return "Invalid login."
+        # 1) No such user?
+        if not user:
+            flash('Invalid username or password.', 'error')
+            return redirect(url_for('login'))
+
+        # 2) Check the password hash
+        stored_hash = user['password']            # direct indexing
+        if not check_password_hash(stored_hash, password):
+            flash('Invalid username or password.', 'error')
+            return redirect(url_for('login'))
+
+        # 3) Check approval flag
+        if not user['is_approved']:               # direct indexing
+            flash('Your account is still pending approval.', 'info')
+            return redirect(url_for('login'))
+
+        # 4) All good — log them in
+        session.clear()
+        session['user_id'] = user['id']
+        session['user_name'] = user['username']
+        flash('Logged in successfully!', 'success')
+        return redirect(url_for('home'))
+
+    # GET → render the form
     return render_template('login.html')
 
 # Logout
 @app.route('/logout')
 def logout():
+    # Clear the session (logs the user out)
     session.clear()
-    return redirect('/')
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+@admin_bp.route('/registrations')
+def view_registrations():
+    pending = query_db("SELECT * FROM users WHERE is_approved = 0")
+    return render_template('admin_registrations.html', users=pending)
+
+@admin_bp.route('/registrations/<int:user_id>/approve')
+def approve_registration(user_id):
+    query_db("UPDATE users SET is_approved = 1 WHERE id = ?", (user_id,))
+    notify_user(user_id, 'Your account has been approved!')
+    flash('User approved.', 'success')
+    return redirect(url_for('admin.view_registrations'))
+
+@admin_bp.route('/registrations/<int:user_id>/deny')
+def deny_registration(user_id):
+    query_db("DELETE FROM users WHERE id = ?", (user_id,))
+    flash('User denied and removed.', 'info')
+    return redirect(url_for('admin.view_registrations'))
+
+# Register blueprint
+app.register_blueprint(admin_bp)
 
 # Subcale page
 @app.route('/subcale/<subcale_name>', methods=['GET', 'POST'])
@@ -478,18 +657,6 @@ def user_profile(user_id):
     
     return render_template('user_profile.html', user=user)
 
-# def view_user_profile(user_id):
-#     if 'user_id' not in session:
-#         return redirect('/login')
-
-#     conn = sqlite3.connect('calefamily.db')
-#     c = conn.cursor()
-#     c.execute('SELECT username, profile_pic, zodiac_sign, birth_year, favorite_color, favorite_animal, favorite_subject, favorite_hobby, favorite_movie, favorite_book FROM users WHERE id = ?', (user_id,))
-#     user = c.fetchone()
-#     conn.close()
-
-#     return render_template('user_profile.html', user=user)
-
 @app.route('/send/<int:recipient_id>', methods=['GET', 'POST'])
 def send_messages(recipient_id):
     conn = sqlite3.connect('calefamily.db')
@@ -537,48 +704,113 @@ def send_messages(recipient_id):
                            recipient=recipient_username,
                            recipient_id=recipient_id,
                            original_message_content=original_message_content)
+
+@app.route('/sent_messages')
+def sent_messages():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    sent = query_db(
+        """
+        SELECT
+          m.id,
+          u.username     AS recipient,
+          m.content,
+          m.timestamp
+        FROM messages m
+        JOIN users u ON m.recipient_id = u.id
+        WHERE m.sender_id = ? AND m.deleted = 0
+        ORDER BY m.timestamp DESC
+        """,
+        (user_id,)
+    )
+    return render_template('sent_messages.html', messages=sent)
+
 @app.route('/inbox')
 def inbox():
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # Open the DB and request dict‑like rows
     conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
 
-    # Get all non-deleted messages sent to the current user
-    c.execute('''
-        SELECT m.id, u.username, m.content, m.timestamp, m.is_read, m.sender_id
+    # 1) Fetch rows
+    c.execute("""
+        SELECT
+        m.id,
+        COALESCE(u.username, 'System') AS sender,
+        m.content,
+        m.timestamp,
+        m.is_read
         FROM messages m
-        JOIN users u ON m.sender_id = u.id
-        WHERE m.recipient_id = ? AND m.deleted = 0
+        LEFT JOIN users u 
+        ON m.sender_id = u.id
+        WHERE m.recipient_id = ?
+        AND m.deleted      = 0
         ORDER BY m.timestamp DESC
-    ''', (session['user_id'],))
-    messages = c.fetchall()
+    """, (user_id,))
 
-    # Optional: Count unread messages for display
-    c.execute('''
-        SELECT COUNT(*) FROM messages
-        WHERE recipient_id = ? AND is_read = 0 AND deleted = 0
-    ''', (session['user_id'],))
-    unread_count = c.fetchone()[0]
+    rows = c.fetchall()              # this is a list of sqlite3.Row
 
-    return render_template('inbox.html', messages=messages, unread_count=unread_count)
+    # 2) Convert each row into a plain dict
+    messages = [dict(r) for r in rows]
+
+    # 3) Count unread for badge
+    c.execute("""
+        SELECT COUNT(*) AS cnt
+          FROM messages
+         WHERE recipient_id = ?
+           AND is_read      = 0
+           AND deleted      = 0
+    """, (user_id,))
+    unread_count = c.fetchone()['cnt']
+
+    conn.close()
+
+    # (Optional) debug to terminal
+    print(f"DEBUG inbox: {len(messages)} messages →", messages)
+
+    # 4) Render template with a list of dicts
+    return render_template(
+        'inbox.html',
+        messages=messages,
+        unread_count=unread_count
+    )
+
+@app.route('/message/<int:message_id>/delete')
+def delete_message(message_id):
+    db = get_db()
+    db.execute("UPDATE messages SET deleted = 1 WHERE id = ?", (message_id,))
+    db.commit()
+    return redirect(url_for('inbox'))
 
 @app.route('/deleted_messages')
 def deleted_messages():
-    if 'user_id' not in session:
-        return redirect('/login')
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
 
-    conn = sqlite3.connect('calefamily.db')
-    c = conn.cursor()
-    c.execute('''
-        SELECT users.username, messages.content, messages.timestamp
-        FROM messages
-        JOIN users ON messages.sender_id = users.id
-        WHERE messages.recipient_id = ? AND messages.deleted = 1
-        ORDER BY messages.timestamp DESC
-    ''', (session['user_id'],))
-    messages = c.fetchall()
-    conn.close()
-
-    return render_template('deleted_messages.html', messages=messages)
+    db = get_db()
+    deleted = query_db(
+        """
+        SELECT
+          m.id,
+          u.username   AS sender,
+          m.content,
+          m.timestamp
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE m.recipient_id = ? AND m.deleted = 1
+        ORDER BY m.timestamp DESC
+        """,
+        (user_id,)
+    )
+    return render_template('deleted_messages.html', messages=deleted)
 
 @app.route('/mark_as_read/<int:message_id>')
 def mark_as_read(message_id):
@@ -644,6 +876,59 @@ def caleducation():
 @app.route('/calespanol')
 def calespanol():
     return render_template('calespanol.html', subcale_name='calespanol')
+
+# migrations
+def run_migrations(db_path='calefamily.db'):
+    import os
+    print(">>> Opening database at:", os.path.abspath(db_path))
+
+    conn = sqlite3.connect(db_path)
+    cur  = conn.cursor()
+
+    # figure out which columns already exist in users
+    cur.execute("PRAGMA table_info(users);")
+    existing_users = {row[1] for row in cur.fetchall()}
+
+    if 'first' not in existing_users:
+        cur.execute("ALTER TABLE users ADD COLUMN first TEXT NOT NULL DEFAULT '';")
+    if 'last' not in existing_users:
+        cur.execute("ALTER TABLE users ADD COLUMN last TEXT NOT NULL DEFAULT '';")
+    if 'is_approved' not in existing_users:
+        cur.execute("ALTER TABLE users ADD COLUMN is_approved INTEGER NOT NULL DEFAULT 0;")
+    if 'is_admin' not in existing_users:
+        cur.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;")
+
+    # notifications table
+    cur.execute("""
+      CREATE TABLE IF NOT EXISTS notifications (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        recipient   INTEGER NOT NULL,
+        type        TEXT    NOT NULL,
+        payload     TEXT,
+        is_read     INTEGER NOT NULL DEFAULT 0,
+        created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(recipient) REFERENCES users(id)
+      );
+    """)
+
+    # Now migrate messages table
+    cur.execute("PRAGMA table_info(messages);")
+    existing_msgs = {row[1] for row in cur.fetchall()}
+
+    if 'is_read' not in existing_msgs:
+        cur.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0;")
+    if 'deleted' not in existing_msgs:
+        cur.execute("ALTER TABLE messages ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0;")
+
+    conn.commit()
+    conn.close()
+
+# … after you configure your Flask `app` and before `app.run()`:
+if __name__ == '__main__':
+    # ensure new columns & tables exist without touching old data
+    run_migrations()
+    app.run(host='0.0.0.0', port=5001, debug=True)
+
 
 if __name__ == '__main__':
     init_db()

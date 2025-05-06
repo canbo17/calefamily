@@ -4,6 +4,14 @@ import sqlite3
 conn = sqlite3.connect('calefamily.db')
 c = conn.cursor()  # Define the cursor 'c' to interact with the database
 
+# Add new columns (if they don't already exist)
+try:
+    c.execute("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0;")
+    c.execute("ALTER TABLE users ADD COLUMN is_approved BOOLEAN NOT NULL DEFAULT 0;")
+except sqlite3.OperationalError:
+    # columns already exist
+    pass
+
 # Create users table (if not exists)
 c.execute('''
 CREATE TABLE IF NOT EXISTS users (
@@ -60,6 +68,17 @@ CREATE TABLE IF NOT EXISTS reactions (
 )
 ''')
 
+# Create notifications table
+c.execute("""
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+)
+""")
 
 # Commit the changes and close the connection
 conn.commit()

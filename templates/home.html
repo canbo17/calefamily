@@ -3,41 +3,40 @@
 <head>
     <title>CALEFAMILY</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #ffd166;">
-        <div>
-            🌟 Welcome to CaleFamily! 🌟
-        </div>
-        <div>
-            <!-- {% if 'username' in session %}
-                <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile</a>
-            {% endif %} -->
-            {% if 'username' in session %}
-                <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile 
-                {% if unread_count > 0 %}
-                    <span style="background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">{{ unread_count }}</span>
-                {% endif %}
-                </a>
-            {% endif %}
-        </div>
-    </div>
 </head>
 <body>
-    {% if 'username' in session %}
-        <p>Welcome, {{ session['username'] }}! <a href="/logout">Logout</a></p>
-    {% else %}
-        <a href="/login">Login</a> | <a href="/register">Register</a>
-    {% endif %}
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #ffd166;">
+    <div>🌟 Welcome to CaleFamily! 🌟</div>
+    <div>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('inbox') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none; margin-right:8px;">
+          📬 Inbox
+          {% if unread_count > 0 %}
+            <span style="background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">
+              {{ unread_count }}
+            </span>
+          {% endif %}
+        </a>
+        <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">
+          👤 Profile
+        </a>
+      {% endif %}
+    </div>
+  </div>
 
-    <h1>CALEFAMILY</h1>
+  {% if session.get('user_id') %}
+    <p>Welcome, {{ session['username'] }}! <a href="{{ url_for('logout') }}">Log Out</a></p>
+  {% else %}
+    <p><a href="{{ url_for('login') }}">Log In</a> or <a href="{{ url_for('register') }}">Register</a></p>
+  {% endif %}
 
-    <a href="{{ url_for('calengineers') }}" style="background-color: #ef476f; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🛠️ Calengineers</a>
+  <h1>CALEFAMILY</h1>
+  <a href="{{ url_for('calengineers') }}" style="background-color: #ef476f; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🛠️ Calengineers</a>
 
-    <ul>
-        {% for subcale in subcales %}
-            <li>
-                <a href="/subcale/{{ subcale.name }}">{{ subcale.emoji }} {{ subcale.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+  <ul>
+    {% for subcale in subcales %}
+      <li><a href="/subcale/{{ subcale.name }}">{{ subcale.emoji }} {{ subcale.name }}</a></li>
+    {% endfor %}
+  </ul>
 </body>
 </html>

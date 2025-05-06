@@ -1,0 +1,30 @@
+.tables
+
+.headers on
+.mode column
+
+SELECT
+  id         AS user_id,
+  username,
+  password,
+  first,
+  last,
+  is_admin,
+  is_approved
+FROM users; 
+
+SELECT
+  id           AS message_id,
+  sender_id,
+  recipient_id,
+  content,
+  is_read,
+  deleted
+FROM messages
+WHERE recipient_id = 1
+;
+
+SELECT id, username FROM users WHERE is_admin = 1;
+SELECT id, username FROM users WHERE is_approved = 0;
+.quit
+

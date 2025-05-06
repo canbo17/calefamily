@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block body %}
+  <h2>Pending Registrations</h2>
+  <table>
+    <tr><th>Username</th><th>Name</th><th>Actions</th></tr>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.username }}</td>
+        <td>{{ u.first }} {{ u.last }}</td>
+        <td>
+          <a href="{{ url_for('admin.approve_registration', user_id=u.id) }}">Approve</a> |
+          <a href="{{ url_for('admin.deny_registration', user_id=u.id) }}">Deny</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endblock %}

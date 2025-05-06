@@ -5,12 +5,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flashes">
+                {% for category, message in messages %}
+                    <li class="flash {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
     <h1>Register</h1>
-    <form method="POST">
-        Username: <input type="text" name="username" required><br><br>
-        Password: <input type="password" name="password" required><br><br>
-        Confirm Password: <input type="password" name="confirm" required><br><br>
+    <form method="POST" action="{{ url_for('register') }}">
+        Username: <input type="text"  name="username" required><br><br>
+        First Name: <input type="text" name="first"    required><br><br>
+        Last  Name: <input type="text" name="last"     required><br><br>
+        Password (min 4 chars): <input type="password" name="password" minlength="4" required><br><br>
+        Confirm Password: <input type="password" name="confirm" minlength="4" required><br><br>
         <input type="submit" value="Register">
-    </form>
+      </form>
+      
 </body>
 </html>

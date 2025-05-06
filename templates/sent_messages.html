@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
-{% block title %}Deleted Messages – CaleFamily{% endblock %}
+{% block title %}Sent Messages – CaleFamily{% endblock %}
 {% block body %}
-  <h2>🗑️ Deleted Messages</h2>
+  <h2>✉️ Sent Messages</h2>
   {% if messages %}
     <ul class="message-list">
       {% for m in messages %}
         <li>
-          <strong>From:</strong> {{ m['sender'] }}<br>
+          <strong>To:</strong> {{ m['recipient'] }}<br>
           <small>{{ m['timestamp'] }}</small><br>
           <div>{{ m['content']|safe }}</div>
         </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p>No deleted messages.</p>
+    <p>No sent messages.</p>
   {% endif %}
 {% endblock %}
