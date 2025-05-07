@@ -2,6 +2,7 @@
 {% block title %}Deleted Messages – CaleFamily{% endblock %}
 {% block body %}
   <h2>🗑️ Deleted Messages</h2>
+  <a href="{{ url_for('home') }}">🏠 Home</a>
   {% if messages %}
     <ul class="message-list">
       {% for m in messages %}

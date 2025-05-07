@@ -1,5 +1,5 @@
 body {
-    font-family: 'Quicksand', 'Comic Sans MS', cursive;
+    font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     background-color: #f7f7ff;
     color: #333;
     margin: 0;
@@ -111,4 +111,102 @@ img.subcale-banner {
     text-decoration: none;
     display: inline-block;
     margin-top: 5px;
+}
+
+
+#chat-box {
+    max-width: 500px;
+    margin: 20px auto;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fff;
+    font-family: 'Quicksand', sans-serif;
+}
+
+#messages {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+#messages div {
+    margin-bottom: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+/* Remove nth-child styling for messages to avoid alignment by DOM position */
+
+.sender-message {
+    text-align: right;
+    background-color: #a3d5f7; /* light blue for sender */
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 10px;
+    display: block;
+    max-width: 70%;
+    align-self: flex-end;
+    color: black;
+}
+
+.receiver-message {
+    text-align: left;
+    background-color: #f4a261; /* orange for receiver */
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 10px;
+    display: block;
+    max-width: 70%;
+    align-self: flex-start;
+    color: black;
+}
+
+#msg-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    resize: none;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+#chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#user-select {
+    flex-grow: 1;
+    padding: 6px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+}
+
+button {
+    padding: 8px 16px;
+    background-color: #066950;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.selected-user {
+    background-color: #d0f0ff;
+    font-weight: bold;
+    border-radius: 4px;
+  }
+
+button:hover {
+    background-color: #05523e;
 }

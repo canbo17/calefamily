@@ -1,0 +1,40 @@
+<div id="chat-box">
+    <div id="messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;"></div>
+    <textarea id="msg-input" placeholder="Type a message..."></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  
+  <script>
+  let otherUserId = 2;  // replace with dynamic target user ID
+  
+  function fetchMessages() {
+    fetch(`/api/messages?other_id=${otherUserId}`)
+      .then(res => res.json())
+      .then(data => {
+        const box = document.getElementById('messages');
+        box.innerHTML = '';
+        data.forEach(msg => {
+          const el = document.createElement('div');
+          el.textContent = `${msg.sender_id === otherUserId ? 'Them' : 'You'}: ${msg.content}`;
+          el.style.textAlign = msg.sender_id !== otherUserId ? 'right' : 'left';
+          box.appendChild(el);
+        });
+        box.scrollTop = box.scrollHeight;
+      });
+  }
+  
+  function sendMessage() {
+  const content = document.getElementById('msg-input').value;
+  fetch('/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient_id: otherUserId, content })
+  }).then(() => {
+    document.getElementById('msg-input').value = '';
+    fetchMessages();
+  });
+}
+  
+  setInterval(fetchMessages, 3000); // Refresh every 3 seconds
+  fetchMessages();
+  </script>

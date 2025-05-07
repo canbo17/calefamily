@@ -1,14 +1,17 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, session, g
+from flask import Flask, render_template, request, redirect, session
+from flask import url_for, flash, session, g, jsonify
 import sqlite3
 import os
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
-
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev‐only‐change‐me')
 
+
+# INITIAL DATABASE SET UP
 DB_FILE = 'calefamily.db'
 
 # Path to your SQLite file
@@ -42,41 +45,6 @@ def query_db(query, args=(), one=False):
     conn.commit()
     conn.close()
     return (rv[0] if rv else None) if one else rv
-
-# Password hashing helpers
-def hash_password(password):
-    return generate_password_hash(password)
-
-def check_password(password, hashed):
-    return check_password_hash(hashed, password)
-
-# Notification helper
-def notify_user(recipient_id, message, notif_type='registration'):
-    # If the payload is just a string, treat it as a normal notification
-    if isinstance(message, str) or notif_type != 'registration':
-        db = get_db()
-        db.execute(
-            "INSERT INTO notifications (recipient, type, payload) VALUES (?, ?, ?)",
-            (recipient_id, notif_type, message)
-        )
-        db.commit()
-        return
-
-    # Otherwise, it’s a structured registration request
-    approve_url = url_for('admin.approve_registration', user_id=message['pending_id'])
-    deny_url    = url_for('admin.deny_registration',    user_id=message['pending_id'])
-    content = (
-      f"New registration request: <b>{message['username']}</b><br>"
-      f"<a href='{approve_url}'>✅ Approve</a> | "
-      f"<a href='{deny_url}'>❌ Deny</a>"
-    )
-    db = get_db()
-    db.execute(
-        "INSERT INTO messages (sender_id, recipient_id, content) VALUES (?, ?, ?)",
-        (0, recipient_id, content)
-    )
-    db.commit()
-
 
 # Ensure database exists
 def init_db():
@@ -146,46 +114,43 @@ def init_db():
         conn.commit()
         conn.close()
 
-# Home page
-@app.route('/')
-def home():
-    # 1 Existing subcales
-    subcales = [
-        {'name': 'Caleducation', 'emoji': '📚'},
-        {'name': 'Calecho', 'emoji': '🎵'},
-        {'name': 'Calentertainment', 'emoji': '🎬'},
-        {'name': 'Calexplore', 'emoji': '🌎'},
-        {'name': 'Calenrichment', 'emoji': '🎨'},
-        {'name': 'Calespañol', 'emoji': '🗣️'}
-    ]
-    # 2) Default unread‑message count
-    unread_count = 0
 
-    # 3) If logged in, open the DB and count unread messages
-    user_id = session.get('user_id')
-    if user_id:
-        conn = sqlite3.connect('calefamily.db')
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT COUNT(*) 
-              FROM messages 
-             WHERE recipient_id = ? 
-               AND is_read      = 0 
-               AND deleted      = 0
-            """,
-            (user_id,)
+# SECURITY 
+# Password hashing helpers
+def hash_password(password):
+    return generate_password_hash(password)
+
+def check_password(password, hashed):
+    return check_password_hash(hashed, password)
+
+
+# REGISTRATION
+# Notification helper
+def notify_user(recipient_id, message, notif_type='registration'):
+    # If the payload is just a string, treat it as a normal notification
+    if isinstance(message, str) or notif_type != 'registration':
+        db = get_db()
+        db.execute(
+            "INSERT INTO notifications (recipient, type, payload) VALUES (?, ?, ?)",
+            (recipient_id, notif_type, message)
         )
-        # fetchone()[0] yields the integer count
-        unread_count = cursor.fetchone()[0] or 0
-        conn.close()
+        db.commit()
+        return
 
-    # 4) Render with the unread_count in your context
-    return render_template(
-        'home.html',
-        subcales=subcales,
-        unread_count=unread_count
+    # Otherwise, it’s a structured registration request
+    approve_url = url_for('admin.approve_registration', user_id=message['pending_id'])
+    deny_url    = url_for('admin.deny_registration',    user_id=message['pending_id'])
+    content = (
+      f"New registration request: <b>{message['username']}</b><br>"
+      f"<a href='{approve_url}'>✅ Approve</a> | "
+      f"<a href='{deny_url}'>❌ Deny</a>"
     )
+    db = get_db()
+    db.execute(
+        "INSERT INTO messages (sender_id, recipient_id, content) VALUES (?, ?, ?)",
+        (0, recipient_id, content)
+    )
+    db.commit()
 
 # Register
 @app.route('/register', methods=['GET', 'POST'])
@@ -330,6 +295,50 @@ def deny_registration(user_id):
 # Register blueprint
 app.register_blueprint(admin_bp)
 
+
+# SITES
+# Home page
+@app.route('/')
+def home():
+    # 1 Existing subcales
+    subcales = [
+        {'name': 'Caleducation', 'emoji': '📚'},
+        {'name': 'Calecho', 'emoji': '🎵'},
+        {'name': 'Calentertainment', 'emoji': '🎬'},
+        {'name': 'Calexplore', 'emoji': '🌎'},
+        {'name': 'Calenrichment', 'emoji': '🎨'},
+        {'name': 'Calespañol', 'emoji': '🗣️'}
+    ]
+    # 2) Default unread‑message count
+    unread_count = 0
+
+    # 3) If logged in, open the DB and count unread messages
+    user_id = session.get('user_id')
+    if user_id:
+        conn = sqlite3.connect('calefamily.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) 
+              FROM messages 
+             WHERE recipient_id = ? 
+               AND is_read      = 0 
+               AND deleted      = 0
+               AND message_type = 'mail'
+            """,
+            (user_id,)
+        )
+        # fetchone()[0] yields the integer count
+        unread_count = cursor.fetchone()[0] or 0
+        conn.close()
+
+    # 4) Render with the unread_count in your context
+    return render_template(
+        'home.html',
+        subcales=subcales,
+        unread_count=unread_count
+    )
+
 # Subcale page
 @app.route('/subcale/<subcale_name>', methods=['GET', 'POST'])
 def subcale(subcale_name):
@@ -374,6 +383,32 @@ def subcale(subcale_name):
     conn.close()
     return render_template('subcale.html', subcale_name=subcale_name, posts=posts_with_comments)
 
+# Each subcale html definition
+@app.route('/calecho')
+def calecho():
+    return render_template('calecho.html', subcale_name='calecho')
+
+@app.route('/calexplore')
+def calexplore():
+    return render_template('calexplore.html', subcale_name='calexplore')
+
+@app.route('/calentertainment')
+def calentertainment():
+    return render_template('calentertainment.html', subcale_name='calentertainment')
+
+@app.route('/calenrichment')
+def calenrichment():
+    return render_template('calenrichment.html', subcale_name='calenrichment')
+
+@app.route('/caleducation')
+def caleducation():
+    return render_template('caleducation.html', subcale_name='caleducation')
+
+@app.route('/calespanol')
+def calespanol():
+    return render_template('calespanol.html', subcale_name='calespanol')
+
+# POSTING & COMMENTING
 # Edit post
 @app.route('/edit_post/<int:post_id>', methods=['GET', 'POST'])
 def edit_post(post_id):
@@ -564,7 +599,8 @@ def react(post_id, reaction):
 
     return redirect(request.referrer)
 
-# Profiles
+
+# PROFILES
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
@@ -578,7 +614,7 @@ def profile():
     # Get unread message count
     c.execute('''
         SELECT COUNT(*) FROM messages
-        WHERE recipient_id = ? AND is_read = 0
+        WHERE recipient_id = ? AND is_read = 0 AND message_type = 'mail'
     ''', (session['user_id'],))
     unread_count = c.fetchone()[0]
     conn.close()
@@ -657,6 +693,8 @@ def user_profile(user_id):
     
     return render_template('user_profile.html', user=user)
 
+
+# MAILBOX
 @app.route('/send/<int:recipient_id>', methods=['GET', 'POST'])
 def send_messages(recipient_id):
     conn = sqlite3.connect('calefamily.db')
@@ -674,8 +712,8 @@ def send_messages(recipient_id):
 
         # Insert the new message into the database
         c.execute('''
-            INSERT INTO messages (sender_id, recipient_id, content, timestamp)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO messages (sender_id, recipient_id, content, timestamp, message_type)
+            VALUES (?, ?, ?, ?, 'mail')
         ''', (sender_id, recipient_id, content, datetime.now()))
 
         conn.commit()
@@ -752,6 +790,7 @@ def inbox():
         ON m.sender_id = u.id
         WHERE m.recipient_id = ?
         AND m.deleted      = 0
+        AND m.message_type = 'mail'
         ORDER BY m.timestamp DESC
     """, (user_id,))
 
@@ -767,6 +806,7 @@ def inbox():
          WHERE recipient_id = ?
            AND is_read      = 0
            AND deleted      = 0
+           AND message_type = 'mail'
     """, (user_id,))
     unread_count = c.fetchone()['cnt']
 
@@ -843,8 +883,8 @@ def respond_to_message(message_id):
         recipient_id = original['sender_id']  # The original sender becomes the recipient
 
         c.execute('''
-            INSERT INTO messages (sender_id, recipient_id, content, is_read)
-            VALUES (?, ?, ?, 0)
+        INSERT INTO messages (sender_id, recipient_id, content, is_read, message_type)
+        VALUES (?, ?, ?, 0, 'mail')
         ''', (sender_id, recipient_id, response_text))
 
         conn.commit()  # Use conn not db
@@ -852,30 +892,94 @@ def respond_to_message(message_id):
 
     return render_template('respond.html', message=original)
 
-# Each subcale html definition
-@app.route('/calecho')
-def calecho():
-    return render_template('calecho.html', subcale_name='calecho')
 
-@app.route('/calexplore')
-def calexplore():
-    return render_template('calexplore.html', subcale_name='calexplore')
+# CHAT
+CORS(app)
 
-@app.route('/calentertainment')
-def calentertainment():
-    return render_template('calentertainment.html', subcale_name='calentertainment')
+@app.route('/api/messages', methods=['GET'])
+def get_messages():
+    user_id = session.get('user_id')
+    other_id = request.args.get('other_id')
 
-@app.route('/calenrichment')
-def calenrichment():
-    return render_template('calenrichment.html', subcale_name='calenrichment')
+    conn = get_db()
+    cur = conn.cursor()
+    # Fetch messages between user_id and other_id
+    cur.execute("""
+        SELECT m.*, u.username
+        FROM messages m
+        JOIN users u ON m.sender_id = u.id
+        WHERE ((m.sender_id = ? AND m.recipient_id = ?) OR (m.sender_id = ? AND m.recipient_id = ?))
+          AND m.message_type = 'chat'
+        ORDER BY m.timestamp ASC
+    """, (user_id, other_id, other_id, user_id))
 
-@app.route('/caleducation')
-def caleducation():
-    return render_template('caleducation.html', subcale_name='caleducation')
+    messages = [
+        {
+            'id': row[0],
+            'sender_id': row[1],
+            'recipient_id': row[2],
+            'content': row[3],
+            'timestamp': row[4],
+            'is_read': bool(row[5]),
+            'sender_name': row[8]  # username from joined users table
+        } for row in cur.fetchall()
+    ]
 
-@app.route('/calespanol')
-def calespanol():
-    return render_template('calespanol.html', subcale_name='calespanol')
+    # Mark unread messages from other_id to user_id as read (for chat messages)
+    cur.execute("""
+        UPDATE messages
+        SET is_read = 1
+        WHERE sender_id = ? AND recipient_id = ? AND message_type = 'chat' AND is_read = 0
+    """, (other_id, user_id))
+    conn.commit()
+
+    # --- Add: Unread counts for all users except current chat ---
+    # For the current user, count unread chat messages from each other user (excluding current chat)
+    cur.execute("""
+        SELECT sender_id, COUNT(*) as unread_count
+        FROM messages
+        WHERE recipient_id = ?
+          AND is_read = 0
+          AND message_type = 'chat'
+        GROUP BY sender_id
+    """, (user_id,))
+    unread_counts = {row[0]: row[1] for row in cur.fetchall()}
+
+    return jsonify({'messages': messages, 'unread_counts': unread_counts})
+
+@app.route('/api/messages', methods=['POST'])
+def send_message():
+    user_id = session.get('user_id')
+    data = request.get_json()
+    recipient_id = data.get('recipient_id')
+    content = data.get('content')
+
+    print("DEBUG send_message → user_id:", user_id)
+    print("DEBUG send_message → recipient_id:", recipient_id)
+    print("DEBUG send_message → content:", content)
+
+    if not user_id or not recipient_id or not content:
+        return jsonify({'error': 'Missing data'}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO messages (sender_id, recipient_id, content, message_type)
+        VALUES (?, ?, ?, 'chat')
+    """, (user_id, recipient_id, content))
+    conn.commit()
+
+    return jsonify({'success': True})
+
+@app.route('/api/users')
+def get_users():
+    user_id = session.get('user_id')  # current user
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT id, username FROM users WHERE id != ?", (user_id,))
+    users = [{'id': row[0], 'username': row[1]} for row in cur.fetchall()]
+    return jsonify(users)
+
 
 # migrations
 def run_migrations(db_path='calefamily.db'):
@@ -898,6 +1002,7 @@ def run_migrations(db_path='calefamily.db'):
     if 'is_admin' not in existing_users:
         cur.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;")
 
+
     # notifications table
     cur.execute("""
       CREATE TABLE IF NOT EXISTS notifications (
@@ -911,6 +1016,20 @@ def run_migrations(db_path='calefamily.db'):
       );
     """)
 
+    # create messages table
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id INTEGER NOT NULL,
+        recipient_id INTEGER NOT NULL,
+        content TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        is_read INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(sender_id) REFERENCES users(id),
+        FOREIGN KEY(recipient_id) REFERENCES users(id)
+    );
+    """)
+    
     # Now migrate messages table
     cur.execute("PRAGMA table_info(messages);")
     existing_msgs = {row[1] for row in cur.fetchall()}
@@ -919,6 +1038,8 @@ def run_migrations(db_path='calefamily.db'):
         cur.execute("ALTER TABLE messages ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0;")
     if 'deleted' not in existing_msgs:
         cur.execute("ALTER TABLE messages ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0;")
+    if 'message_type' not in existing_msgs:
+        cur.execute("ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'mail';")
 
     conn.commit()
     conn.close()
@@ -926,10 +1047,6 @@ def run_migrations(db_path='calefamily.db'):
 # … after you configure your Flask `app` and before `app.run()`:
 if __name__ == '__main__':
     # ensure new columns & tables exist without touching old data
+    init_db()
     run_migrations()
     app.run(host='0.0.0.0', port=5001, debug=True)
-
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True, host="0.0.0.0", port=5001)
