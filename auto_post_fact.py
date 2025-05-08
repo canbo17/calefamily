@@ -3,16 +3,18 @@ import sqlite3
 import random
 import requests
 import os
+from bs4 import BeautifulSoup
 
-# Choose a topic
-topics = ['History for kids', 'Geography for kids', 'Science for kids']
-topic = random.choice(topics)
+url = requests.get("https://en.wikipedia.org/wiki/Special:Random")
+soup = BeautifulSoup(url.content, "html.parser")
+title = soup.find(class_="firstHeading").text
+url = "https://en.wikipedia.org/wiki/%s" % title
 
 # Fetch summary
 wikipedia.set_lang("en")
 try:
-    page = wikipedia.page(topic)
-    summary = wikipedia.summary(topic, sentences=2)
+    page = wikipedia.page(title)
+    summary = wikipedia.summary(title, sentences=2)
     image_url = next((img for img in page.images if img.lower().endswith(('.jpg', '.jpeg', '.png'))), None)
     credit = f"Fact from Wikipedia: {page.url}"
 
@@ -30,7 +32,7 @@ try:
         f.write(fact_text)
 
 except wikipedia.exceptions.PageError:
-    print(f"Page not found for topic: {topic}")
+    print(f"Page not found for topic: {title}")
     exit(1)
 
 # Save to your database
@@ -41,10 +43,3 @@ cur = conn.cursor()
 user_id = 1
 subcale = 'caleducation'
 content = f"{summary}\n\n📸 {credit}"
-
-# cur.execute('INSERT INTO posts (user_id, subcale_name, content) VALUES (?, ?, ?)',
-#             (user_id, subcale, content))
-
-#print("Posting as user_id:", user_id)
-#print("Post content:\n", content)
-# Optionally: Download and store the image or link it in the content
