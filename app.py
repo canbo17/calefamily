@@ -341,7 +341,7 @@ def home():
 
 # Subcale page
 @app.route('/subcale/<subcale_name>', methods=['GET', 'POST'])
-def subcale(subcale_name):
+def subcale(subcale_name, **kwargs):
         # 1 Existing subcales
     subcales = [
         {'name': 'Caleducation', 'emoji': '📚'},
@@ -352,7 +352,7 @@ def subcale(subcale_name):
         {'name': 'Calespañol', 'emoji': '🗣️'}
     ]
     
-    print("SESSION DUMP:", dict(session))
+    #print("SESSION DUMP:", dict(session))
     if 'user_id' not in session:
         return redirect('/login')
 
@@ -381,7 +381,7 @@ def subcale(subcale_name):
     # Fetch comments for each post (unchanged)
     posts_with_comments = []
     for post in posts:
-        print("DEBUG >> session username:", session.get('username'), "| post author:", post[1])
+        #print("DEBUG >> session username:", session.get('username'), "| post author:", post[1])
         post_id = post[0]
         c.execute('''
             SELECT users.username, comments.comment, comments.id, 
@@ -426,12 +426,20 @@ def subcale(subcale_name):
         # fetchone()[0] yields the integer count
         unread_count = cursor.fetchone()[0] or 0
 
+    if subcale_name.lower() == 'caleducation':
+        try:
+            with open("static/featured_fact.txt", "r", encoding="utf-8") as f:
+                kwargs['featured_fact'] = f.read()
+        except FileNotFoundError:
+            kwargs['featured_fact'] = "Today's featured fact is not available."    
+
     return render_template(template_file, 
                            subcale_name=subcale_name, 
                            posts=posts_with_comments, 
                            current_user=session.get('username'),
                            subcales=subcales,
-                           unread_count=unread_count)
+                           unread_count=unread_count,
+                           **kwargs)
 
 # Each subcale html definition
 
@@ -453,7 +461,16 @@ def calenrichment():
 
 @app.route('/caleducation')
 def caleducation():
-    return subcale('caleducation')
+    try:
+        with open("static/featured_fact.txt", "r", encoding="utf-8") as f:
+            fact_text = f.read()
+    except FileNotFoundError:
+        fact_text = "Today's featured fact is not available."
+
+    print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+
+    return subcale('caleducation', featured_fact=fact_text)
+
 
 @app.route('/calespanol')
 def calespanol():

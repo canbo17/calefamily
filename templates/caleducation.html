@@ -1,13 +1,21 @@
 {% extends "subcale.html" %}
 
 {% block extra_content %}
-<div style="text-align: center;">
-  <img src="{{ url_for('static', filename='images/caleducation.jpg') }}" alt="Caleducation image" style="width: 300px; height: auto;">
-</div>  
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
+  <div>
+    <img src="{{ url_for('static', filename='images/caleducation.jpg') }}" alt="Caleducation image" style="width: 300px; height: auto;">
+  </div>
+  <div style="width: 250px; white-space: pre-wrap; font-size: 0.9em; line-height: 1.5;">
+    {{ featured_fact | safe }}
+  </div>
+  <div>
+    <img src="{{ url_for('static', filename='images/featured_fact.jpg') }}" alt="Featured fact image" style="width: 300px; height: auto; border-radius: 8px;">
+  </div>
+</div>
 {% endblock %}
 
 {% block body_text %}
-<p style="text-align: center; margin: 20px auto; max-width: 600px;">
+<p style="text-align: center; margin: 0 auto 40px auto; max-width: 600px;">
   Welcome to Caleducation 📚 — your place to discover and share educational resources, learning tips, and inspiring stories!
 </p>
 {% endblock %}
