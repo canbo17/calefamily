@@ -8,16 +8,20 @@
     font-weight: bold;
   }
 </style>
-<div style="display: flex; gap: 20px; align-items: flex-start;">
-  <img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="Calecho image" style="width: 300px; border-radius: 8px;">
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 20px;">
+  <!-- Centered image (like caleducation) -->
+  <div style="text-align: center;">
+    <img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="Calecho image" style="width: 300px; height: auto; border-radius: 8px;">
+  </div>
 
-  <div id="radio-widget" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px; flex-grow: 1;">
+  <!-- Radio widget floats to the right -->
+  <div id="radio-widget" style="width: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
     <h3>🎧 Calecho Radio</h3>
     <div style="margin-bottom: 10px;">
       <button onclick="setStation('latin')">Latin</button>
       <button onclick="setStation('pop')">Pop</button>
       <button onclick="setStation('classic')">Classic</button>
-      <button onclick="setStation('turk')">Turkish</button>
+      <button onclick="setStation('rock')">Rock</button>
       <button onclick="setStation('rb')">R&amp;B</button>
     </div>
     <audio id="radio-player" controls style="width: 100%;">
@@ -54,3 +58,11 @@
     }
 </script>
 {% endblock %}
+
+{% block body_text %}
+<p style="text-align: center; margin: 20px auto; max-width: 600px;">
+  🎧 Welcome to Calecho — the community's radio space for sharing music, rhythms, and cultural vibes from around the world!
+</p>
+{% endblock %}
+
+

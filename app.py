@@ -342,6 +342,16 @@ def home():
 # Subcale page
 @app.route('/subcale/<subcale_name>', methods=['GET', 'POST'])
 def subcale(subcale_name):
+        # 1 Existing subcales
+    subcales = [
+        {'name': 'Caleducation', 'emoji': '📚'},
+        {'name': 'Calecho', 'emoji': '🎵'},
+        {'name': 'Calentertainment', 'emoji': '🎬'},
+        {'name': 'Calexplore', 'emoji': '🌎'},
+        {'name': 'Calenrichment', 'emoji': '🎨'},
+        {'name': 'Calespañol', 'emoji': '🗣️'}
+    ]
+    
     print("SESSION DUMP:", dict(session))
     if 'user_id' not in session:
         return redirect('/login')
@@ -420,6 +430,7 @@ def subcale(subcale_name):
                            subcale_name=subcale_name, 
                            posts=posts_with_comments, 
                            current_user=session.get('username'),
+                           subcales=subcales,
                            unread_count=unread_count)
 
 # Each subcale html definition

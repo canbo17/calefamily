@@ -43,7 +43,20 @@
         'calespanol': 'calespanol.jpg'
     } %}
 
+    {% block navigation %}
+    <ul>
+    {% for subcale in subcales %}
+        <li>
+        <a href="/subcale/{{ subcale.name | lower | replace('ñ', 'n') }}">
+            {{ subcale.emoji }} {{ subcale.name }}
+        </a>
+        </li>
+    {% endfor %}
+    </ul>
+    {% endblock %}
+
     {% block extra_content %}{% endblock %}
+    {% block body_text %}{% endblock %}
 
     {% if not self.extra_content() %}
       <img class="subcale-banner" src="{{ url_for('static', filename='images/' + subcale_images[subcale_name.lower()|replace('ñ', 'n')]) }}" alt="{{ display_name }} image" style="max-width: 100%; height: auto;">
