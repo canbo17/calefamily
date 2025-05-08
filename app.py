@@ -257,7 +257,7 @@ def login():
         # 4) All good — log them in
         session.clear()
         session['user_id'] = user['id']
-        session['user_name'] = user['username']
+        session['username'] = user['username']
         flash('Logged in successfully!', 'success')
         return redirect(url_for('home'))
 
@@ -342,6 +342,7 @@ def home():
 # Subcale page
 @app.route('/subcale/<subcale_name>', methods=['GET', 'POST'])
 def subcale(subcale_name):
+    print("SESSION DUMP:", dict(session))
     if 'user_id' not in session:
         return redirect('/login')
 
@@ -353,6 +354,8 @@ def subcale(subcale_name):
         c.execute('INSERT INTO posts (user_id, subcale_name, content) VALUES (?, ?, ?)',
                   (session['user_id'], subcale_name, content))
         conn.commit()
+        conn.close()
+        return redirect(url_for('subcale', subcale_name=subcale_name))
 
     # Fetch posts WITH REACTION COUNTS (added hearts, laughs, notes, thumbs)
     c.execute('''
@@ -368,6 +371,7 @@ def subcale(subcale_name):
     # Fetch comments for each post (unchanged)
     posts_with_comments = []
     for post in posts:
+        print("DEBUG >> session username:", session.get('username'), "| post author:", post[1])
         post_id = post[0]
         c.execute('''
             SELECT users.username, comments.comment, comments.id, 
@@ -381,32 +385,68 @@ def subcale(subcale_name):
         posts_with_comments.append((post[0], post[1], post[2], post[3], post[4], post[5], post[6], comments))
 
     conn.close()
-    return render_template('subcale.html', subcale_name=subcale_name, posts=posts_with_comments)
+
+    # Dynamically select template
+    template_file = f"{subcale_name.lower()}.html"
+    # Use app.template_folder if set, else default to 'templates'
+    template_folder = app.template_folder if app.template_folder else os.path.join(os.path.dirname(__file__), 'templates')
+    template_path = os.path.join(template_folder, template_file)
+    if not os.path.exists(template_path):
+        template_file = "subcale.html"
+
+    # Default unread‑message count
+    unread_count = 0
+
+    # 3) If logged in, open the DB and count unread messages
+    user_id = session.get('user_id')
+    if user_id:
+        conn = sqlite3.connect('calefamily.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) 
+              FROM messages 
+             WHERE recipient_id = ? 
+               AND is_read      = 0 
+               AND deleted      = 0
+               AND message_type = 'mail'
+            """,
+            (user_id,)
+        )
+        # fetchone()[0] yields the integer count
+        unread_count = cursor.fetchone()[0] or 0
+
+    return render_template(template_file, 
+                           subcale_name=subcale_name, 
+                           posts=posts_with_comments, 
+                           current_user=session.get('username'),
+                           unread_count=unread_count)
 
 # Each subcale html definition
+
 @app.route('/calecho')
 def calecho():
-    return render_template('calecho.html', subcale_name='calecho')
+    return subcale('calecho')
 
 @app.route('/calexplore')
 def calexplore():
-    return render_template('calexplore.html', subcale_name='calexplore')
+    return subcale('calexplore')
 
 @app.route('/calentertainment')
 def calentertainment():
-    return render_template('calentertainment.html', subcale_name='calentertainment')
+    return subcale('calentertainment')
 
 @app.route('/calenrichment')
 def calenrichment():
-    return render_template('calenrichment.html', subcale_name='calenrichment')
+    return subcale('calenrichment')
 
 @app.route('/caleducation')
 def caleducation():
-    return render_template('caleducation.html', subcale_name='caleducation')
+    return subcale('caleducation')
 
 @app.route('/calespanol')
 def calespanol():
-    return render_template('calespanol.html', subcale_name='calespanol')
+    return subcale('calespanol')
 
 # POSTING & COMMENTING
 # Edit post

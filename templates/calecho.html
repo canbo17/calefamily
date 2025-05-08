@@ -1,2 +1,56 @@
-<h1>calecho</h1>
-<img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="Calecho image">
+{% extends "subcale.html" %}
+
+{% block extra_content %}
+<style>
+  #radio-widget button.active {
+    background-color: #06d6a0;
+    color: white;
+    font-weight: bold;
+  }
+</style>
+<div style="display: flex; gap: 20px; align-items: flex-start;">
+  <img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="Calecho image" style="width: 300px; border-radius: 8px;">
+
+  <div id="radio-widget" style="padding: 10px; border: 1px solid #ccc; border-radius: 8px; flex-grow: 1;">
+    <h3>🎧 Calecho Radio</h3>
+    <div style="margin-bottom: 10px;">
+      <button onclick="setStation('latin')">Latin</button>
+      <button onclick="setStation('pop')">Pop</button>
+      <button onclick="setStation('classic')">Classic</button>
+      <button onclick="setStation('turk')">Turkish</button>
+      <button onclick="setStation('rb')">R&amp;B</button>
+    </div>
+    <audio id="radio-player" controls style="width: 100%;">
+      <source id="radio-source" src="" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  console.log("📻 calecho.js loaded");
+  const stations = {
+      latin: 'https://stream.0nlineradio.com/latin?ref=radiobrowser',
+      pop: 'https://0n-hits.radionetz.de/0n-hits.mp3',
+      classic: 'https://wwfm.streamguys1.com/live-mp3',
+      turk: 'https://23543.live.streamtheworld.com/JOY_TURK.mp3',
+      rb: 'http://media-the.musicradio.com/CapitalXTRALondonMP3'
+    };
+
+    function setStation(name) {
+      const player = document.getElementById('radio-player');
+      const source = document.getElementById('radio-source');
+      source.src = stations[name];
+      player.load();
+      player.play().catch(e => console.log("Autoplay blocked:", e));
+
+      // Highlight the active button
+      const buttons = document.querySelectorAll('#radio-widget button');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      const activeBtn = Array.from(buttons).find(btn => btn.textContent.toLowerCase() === name.toLowerCase());
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+</script>
+{% endblock %}

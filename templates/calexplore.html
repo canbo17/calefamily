@@ -1,2 +1,7 @@
-<h1>calexplore</h1>
-<img src="{{ url_for('static', filename='images/calexplore.jpg') }}" alt="calexplore image">
+{% extends "subcale.html" %}
+
+{% block extra_content %}
+<div style="text-align: center;">
+  <img src="{{ url_for('static', filename='images/calexplore.jpg') }}" alt="calexplore image" style="width: 300px; height: auto;">
+</div>
+{% endblock %}

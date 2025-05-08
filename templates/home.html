@@ -60,7 +60,11 @@
 
   <ul>
     {% for subcale in subcales %}
-      <li><a href="/subcale/{{ subcale.name }}">{{ subcale.emoji }} {{ subcale.name }}</a></li>
+    <li>
+      <a href="/subcale/{{ subcale.name | lower | replace('ñ', 'n') }}">
+        {{ subcale.emoji }} {{ subcale.name }}
+      </a>
+    </li>
     {% endfor %}
   </ul>
 </body>

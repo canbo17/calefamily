@@ -1,20 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{{ subcale_name }}</title>
+    {% set display_name = subcale_name.replace('n', 'ñ') if subcale_name.lower() == 'calespanol' else subcale_name %}
+    <title>{{ display_name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: #ffd166;">
         <div>
             🌟 Welcome to CaleFamily! 🌟
         </div>
-        <div>
-            {% if 'username' in session %}
-                <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">👤 Profile</a>
-            {% endif %}
+        <div style="text-align: right;">
+            <a href="/">Back to Home</a><br><br>
         </div>
+        <div>
+            {% if session.get('user_id') %}
+              <a href="{{ url_for('inbox') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none; margin-right:8px;">
+                📬 Inbox
+                {% if unread_count > 0 %}
+                  <span style="background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">
+                    {{ unread_count }}
+                  </span>
+                {% endif %}
+              </a>
+              <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">
+                👤 Profile
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
     </div>
 </head>
+{% block scripts %}{% endblock %}
 <body>
+  {% block content %}
     {% set subcale_images = {
         'caleducation': 'caleducation.jpg',
         'caleengineers': 'caleengineers.jpg',
@@ -24,15 +42,14 @@
         'calenrichment': 'calenrichment.jpg',
         'calespanol': 'calespanol.jpg'
     } %}
-    
-    <h1>{{ subcale_name }}</h1>
-    
-    <!-- Display image for the current subcale -->
-    <img class="subcale-banner" src="{{ url_for('static', filename='images/' + subcale_images[subcale_name.lower()|replace('ñ', 'n')]) }}" alt="{{ subcale_name }} image">    
 
+    {% block extra_content %}{% endblock %}
 
-    <h1>{{ subcale_name }}</h1>
-    <a href="/">Back to Home</a><br><br>
+    {% if not self.extra_content() %}
+      <img class="subcale-banner" src="{{ url_for('static', filename='images/' + subcale_images[subcale_name.lower()|replace('ñ', 'n')]) }}" alt="{{ display_name }} image" style="max-width: 100%; height: auto;">
+    {% endif %}
+
+    <h1>{{ display_name }}</h1>
 
     <h2>Create a New Post</h2>
     <form method="POST">
@@ -44,12 +61,14 @@
     <ul>
         {% for post in posts %}
             <li style="margin-bottom: 20px;">
-                <b>{{ post[1] }}</b>: {{ post[2] }}
 
-                {% if session['username'] == post[1] %}
-                    <a href="{{ url_for('edit_post', post_id=post[0], subcale_name=subcale_name) }}">Edit</a> |
+                <!-- DEBUG: session='{{ session['username'] }}', post_author='{{ post[1] }}' -->
+                {% if current_user == post[1] %}
+                    <form method="GET" action="{{ url_for('edit_post', post_id=post[0], subcale_name=subcale_name) }}" style="display:inline;">
+                        <button type="submit" style="padding: 2px 6px; font-size: 0.9em;">Edit</button>
+                    </form>
                     <form method="POST" action="{{ url_for('delete_post', post_id=post[0], subcale_name=subcale_name) }}" style="display:inline;">
-                        <button type="submit" style="color: red;">Delete</button>
+                        <button type="submit" style="color: red; padding: 2px 6px; font-size: 0.9em;">Delete</button>
                     </form>
                 {% endif %}
                 <!-- Reaction Buttons (Fixed: Ensure post[3], post[4], etc. are treated as numbers) -->
@@ -116,7 +135,7 @@
                             </form>
                         </div>
                         
-                        {% if session['username'] == comment[0] %}
+                        {% if current_user == comment[0] %}
                             [<a href="{{ url_for('edit_comment', comment_id=comment[2]) }}">Edit</a>]
                             [<a href="{{ url_for('delete_comment', comment_id=comment[2]) }}" style="color: red;">Delete</a>]
                         {% endif %}
@@ -132,5 +151,6 @@
             </li>
         {% endfor %}
     </ul>
+  {% endblock %}
 </body>
 </html>
