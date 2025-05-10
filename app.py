@@ -341,12 +341,7 @@ def home():
             status = get_user_status(row['last_seen'])
             users.append({'id': row['id'], 'username': row['username'], 'status': status})
         conn.close()
-
-    # 4) Render with the unread_count in your context
-    for row in rows:
-        status = get_user_status(row['last_seen'])
-        print(f"[DEBUG] User {row['username']} last seen {row['last_seen']} → status {status}")
-        users.append({'id': row['id'], 'username': row['username'], 'status': status})
+       
     return render_template(
         'home.html',
         subcales=subcales,
