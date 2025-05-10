@@ -457,6 +457,12 @@ def subcale(subcale_name, **kwargs):
         except FileNotFoundError:
             kwargs['featured_fact'] = "Today's location is not available."   
 
+    if subcale_name.lower() == 'calespanol':
+        try:
+            with open("static/spanish.txt", "r", encoding="utf-8") as f:
+                kwargs['spanish_word'] = f.read()
+        except FileNotFoundError:
+            kwargs['spanish_word'] = "Today's word is not available."      
 
     return render_template(template_file, 
                            subcale_name=subcale_name, 
@@ -494,7 +500,6 @@ def caleducation():
 
     return subcale('caleducation', featured_fact=fact_text)
 
-
 @app.route('/calenrichment')
 def calenrichment():
     return subcale('calenrichment')
@@ -511,10 +516,17 @@ def calentertainment():
 
     return subcale('calentertainment', plot_movie=plot_text)
 
-
 @app.route('/calespanol')
 def calespanol():
-    return subcale('calespanol')
+    try:
+        with open("static/spanish.txt", "r", encoding="utf-8") as f:
+            spanish_text = f.read()
+    except FileNotFoundError:
+        spanish_text = "Today's word is not available."
+
+    #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+
+    return subcale('calespanol', spanish_word=spanish_text)
 
 # POSTING & COMMENTING
 # Edit post
