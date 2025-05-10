@@ -8,4 +8,5 @@ __pycache__/
 
 # SQLite database (if you move to migrations later, you can drop this)
 calefamily.db
-auto_post_fact.py
+#auto_post_fact.py
+#auto_movie_fetch.py
