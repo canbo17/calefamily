@@ -255,7 +255,7 @@ button:hover {
 
 .subcale-grid img {
   width: 100%;
-  max-width: 500px;
+  max-width: 350px;
   height: auto;
   border-radius: 8px;
   padding: 20 20px;
@@ -265,7 +265,7 @@ button:hover {
   white-space: pre-wrap;
   font-size: 1.2em;
   line-height: 1.5;
-  max-width: 400px;
+  max-width: 350px;
   text-align: left;
 }
 

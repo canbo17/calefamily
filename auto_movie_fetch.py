@@ -3,20 +3,21 @@ from imdb import IMDb
 import requests
 import os 
 
-genres = ['Documentary', 'History', 'Family',
-          'Fantasy', 'Mystery', 'Romance', 
-          'Sci-Fi','Thriller', 'Western']
+# genres = ['Documentary', 'History', 'Family',
+#           'Fantasy', 'Mystery', 'Romance', 
+#           'Sci-Fi','Thriller', 'Western']
 
 movie_names = []
 with open('movie_list.txt', 'r') as file:
     for line in file:
-        parts = line.strip().split(',')  # comma-separated
-        for entry in parts[:]:  # skip the index
-            if '(' in entry:
-                name = entry.rsplit('(', 1)[0].strip()
-                movie_names.append(name)
+        name = line.strip()
+        if name:
+            movie_names.append(name)
+
+print(len(movie_names))
 
 random_number = random.randint(1,len(movie_names))
+print(random_number)
 selected_movie = movie_names[random_number]
 print("Chosen Movie : ", selected_movie)
 
@@ -36,7 +37,13 @@ credit = f"Movie details are from IMDB: {page_url}"
 print(credit)
 poster_url = full_info.get('cover url')
 plot = full_info.get('plot')[0]
+print(poster_url)
+poster_url = poster_url.split('._V1_')[0] + '._V1_.jpg'
+print(poster_url)
 
+# update poster URL
+#imdb_id = "tt0111161"
+#poster_url = f"https://m.media-amazon.com/images/M/{movieID}.jpg"
 
 movie_plot = f"{plot}\n\n🎬 {credit}"
 with open(os.path.join('static', 'movie_plot.txt'), 'w') as f:

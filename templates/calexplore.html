@@ -3,11 +3,11 @@
 {% block extra_content %}
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
   <div class="subcale-grid">
-    <img src="{{ url_for('static', filename='images/calexplore.jpg') }}" alt="calexplore image" style="width: 300px; height: auto;">
+    <img src="{{ url_for('static', filename='images/calexplore.jpg') }}" alt="calexplore image" style="width: 350px; height: auto;">
   <div class = "subcale-text2">
     {{ featured_fact | safe }}
   </div>
-    <img src="{{ url_for('static', filename='images/map_with_flag.png') }}" alt="Map with flag image" style="width: 500px; height: auto; border-radius: 8px;">
+    <img src="{{ url_for('static', filename='images/map_with_flag.png') }}" alt="Map with flag image" style="width: 350px; height: auto; border-radius: 8px;">
   </div>
 </div>
 {% endblock %}

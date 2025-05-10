@@ -3,11 +3,11 @@
 {% block extra_content %}
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
   <div class="subcale-grid">
-    <img src="{{ url_for('static', filename='images/calentertainment.jpg') }}" alt="Calentertainment image" style="width: 300px; height: auto;">
+    <img src="{{ url_for('static', filename='images/calentertainment.jpg') }}" alt="Calentertainment image" style="width: 350px; height: auto;">
   <div class = "subcale-text">
     {{ plot_movie | safe }}
   </div>
-    <img src="{{ url_for('static', filename='images/movie_of_the_day.jpg') }}" alt="Movie of the day image" style="width: 250px; height: auto; border-radius: 8px;">
+    <img src="{{ url_for('static', filename='images/movie_of_the_day.jpg') }}" alt="Movie of the day image" style="width: 350px; height: auto; border-radius: 8px;">
   </div>
 </div>
 {% endblock %}

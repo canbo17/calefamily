@@ -1,30 +1,12 @@
 import requests, random, sqlite3 
-import os, folium, time
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from PIL import Image
+from PIL import Image, ImageDraw
 from io import BytesIO
 
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--no-sandbox')
-options.add_argument('--disable-dev-shm-usage')
-options.add_argument('--disable-gpu')
-options.add_argument('--window-size=1200x800')
-options.add_argument('--remote-debugging-port=9222')
-
-# Do NOT specify --user-data-dir unless absolutely necessary
-options.binary_location = "/usr/bin/chromium"
-
-driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", options=options)
-
-# Find a random country
+# STEP 1) : Find a random country write details into a txt file
+# Find a random country 
 response = requests.get("https://restcountries.com/v3.1/all")
 countries = response.json()
 random_country = random.choice(countries)
-countries = response.json()
-
 
 # Safely information fields
 name = random_country.get('name', {}).get('common', 'N/A')
@@ -41,6 +23,8 @@ latlng = random_country.get('latlng', ['N/A', 'N/A'])
 flag = random_country.get('flags', {}).get('png', 'N/A')
 google_maps = random_country.get('maps', {}).get('googleMaps', 'N/A')
 
+#print(name)
+
 # Write results to a file
 with open("static/explore.txt", "w", encoding="utf-8") as f:
     f.write(f"🌍 Country      : {name}\n")
@@ -54,52 +38,65 @@ with open("static/explore.txt", "w", encoding="utf-8") as f:
     f.write(f"🗺️ Google Maps  : {google_maps}\n")
     #f.write(f"🚩 Flag Image URL: {flag}")
 
-
-# Create map with borders as a PNG file
-
+# STEP 2) Create map with borders as a PNG file
 # Coordinates
 lat, lon = latlng[0], latlng[1]
-zoom = 4
 output_path = "static/images/country_satellite_map.png"
 
-# Create map
-m = folium.Map(location=[lat, lon], zoom_start=zoom, tiles=None)
+# Bounding box (lat/lon): [minx, miny, maxx, maxy]
+delta = 20  # degrees
+bbox = [lon - delta, lat - delta, lon + delta, lat + delta]
 
-# Add Esri satellite layer
-folium.TileLayer(
-    tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attr='Esri', name='Esri Satellite'
-).add_to(m)
+# Common export params
+params = {
+    "bbox": f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+    "bboxSR": "4326",
+    "size": "800,600",
+    "format": "png32",  # use png32 for transparency support
+    "f": "image"
+}
 
-# Add labels/boundaries
-folium.TileLayer(
-    tiles='https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-    attr='Esri', name='Boundaries & Labels'
-).add_to(m)
+# Satellite image (World_Imagery)
+sat_url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
+sat_response = requests.get(sat_url, params=params)
+sat_img = Image.open(BytesIO(sat_response.content)).convert("RGBA")
+map_width, map_height = sat_img.size
 
-# Save HTML
-html_path = "map_temp.html"
-m.save(html_path)
+# Boundaries and labels (transparent overlay)
+bound_url = "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/export"
+bound_response = requests.get(bound_url, params=params)
+bound_img = Image.open(BytesIO(bound_response.content)).convert("RGBA")
 
-# Headless browser to capture PNG
-options = webdriver.ChromeOptions()
-options.add_argument("--headless")
-options.add_argument("--window-size=800,600")
+# Blend: boundaries on top with some transparency
+bound_img.putalpha(90)  # optional: reduce opacity to 70%
+composite = Image.alpha_composite(sat_img, bound_img)
 
-driver = webdriver.Chrome(options=options)
-driver.get(f"file://{os.path.abspath(html_path)}")
+# 🎨 Add pin (convert lat/lon to pixel x/y)
+def geo_to_pixel(lat, lon, bbox, img_size):
+    minx, miny, maxx, maxy = bbox
+    x = (lon - minx) / (maxx - minx) * img_size[0]
+    y = (maxy - lat) / (maxy - miny) * img_size[1]  # y-axis is top-down
+    return int(x), int(y)
 
-# Wait to load
-time.sleep(3)
-driver.save_screenshot(output_path)
-driver.quit()
+draw = ImageDraw.Draw(composite)
+# 📐 Image size
+width, height = 800, 600
+pin_x, pin_y = geo_to_pixel(lat, lon, bbox, (width, height))
 
-# Optional: crop whitespace
-img = Image.open(output_path)
-cropped = img.crop(img.getbbox())
-cropped.save(output_path)
+# Draw a red circle pin
+pin_radius = 8
+draw.ellipse(
+    [(pin_x - pin_radius, pin_y - pin_radius), (pin_x + pin_radius, pin_y + pin_radius)],
+    fill=(255, 0, 0, 255),
+    outline=(255, 255, 255, 255),
+    width=2
+)
 
-# Combine map and flag
+# Save result
+composite.save(output_path)
+#print(f"✅ Map with labels saved to {output_path}")
+
+# Combine map flag with the map
 # Load map image
 map_img = Image.open("static/images/country_satellite_map.png").convert("RGBA")
 map_width, map_height = map_img.size

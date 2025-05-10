@@ -1,9 +1,9 @@
-🌍 Country      : Chile
-🏛️ Capital      : Santiago
-🗣️ Languages    : Spanish
-💱 Currency     : Chilean peso ($)
+🌍 Country      : Cayman Islands
+🏛️ Capital      : George Town
+🗣️ Languages    : English
+💱 Currency     : Cayman Islands dollar ($)
 📍 Region       : Americas
-👥 Population   : 19,116,209
-🌐 Borders      : ARG, BOL, PER
-📌 Coordinates  : [-30.0, -71.0]
-🗺️ Google Maps  : https://goo.gl/maps/XboxyNHh2fAjCPNn9
+👥 Population   : 65,720
+🌐 Borders      : None
+📌 Coordinates  : [19.3133, -81.2546]
+🗺️ Google Maps  : https://goo.gl/maps/P3ZVXX3LH63t91hL8
