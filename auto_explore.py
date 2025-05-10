@@ -7,13 +7,17 @@ from PIL import Image
 from io import BytesIO
 
 options = Options()
-options.add_argument("--headless")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--user-data-dir=/tmp/selenium")  # 👈 this is the fix
-options.binary_location = "/usr/bin/chromium"  # adjust if needed
+options.add_argument('--headless')
+options.add_argument('--no-sandbox')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument('--disable-gpu')
+options.add_argument('--window-size=1200x800')
+options.add_argument('--remote-debugging-port=9222')
 
-driver = webdriver.Chrome(options=options)
+# Do NOT specify --user-data-dir unless absolutely necessary
+options.binary_location = "/usr/bin/chromium"
+
+driver = webdriver.Chrome(executable_path="/usr/bin/chromedriver", options=options)
 
 # Find a random country
 response = requests.get("https://restcountries.com/v3.1/all")
