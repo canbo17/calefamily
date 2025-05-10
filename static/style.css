@@ -1,9 +1,13 @@
+.page-content {
+    padding: 40px 40px 0 40px; /* top, right, bottom, left */
+  }
+
 body {
     font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
     background-color: #f7f7ff;
     color: #333;
-    margin: 0;
-    padding: 0;
+    margin: 20;
+    padding: 20;
 }
 
 header, footer {
@@ -210,3 +214,32 @@ button {
 button:hover {
     background-color: #05523e;
 }
+.chat-user {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .status-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  
+  .status-online {
+    background-color: green !important;
+  }
+  
+  .status-recently-online {
+    background-color: orange !important;
+  }
+  
+  .status-offline {
+    background-color: red !important;
+  }
+  
+  .username {
+    font-weight: 500;
+  }

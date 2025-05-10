@@ -1,13 +1,22 @@
 {% extends "subcale.html" %}
 
 {% block extra_content %}
-<div style="text-align: center;">
-  <img src="{{ url_for('static', filename='images/calentertainment.jpg') }}" alt="calentertainment image" style="width: 300px; height: auto;">
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
+  <div>
+    <img src="{{ url_for('static', filename='images/calentertainment.jpg') }}" alt="Calentertainment image" style="width: 300px; height: auto;">
+  </div>
+  <div style="width: 250px; white-space: pre-wrap; font-size: 1.2em; line-height: 1.5;">
+    {{ plot_movie | safe }}
+  </div>
+  <div>
+    <img src="{{ url_for('static', filename='images/movie_of_the_day.jpg') }}" alt="Movie of the day image" style="width: 150px; height: auto; border-radius: 8px;">
+  </div>
 </div>
 {% endblock %}
 
 {% block body_text %}
-<p style="text-align: center; margin: 20px auto; max-width: 600px;">
-  🎬 Welcome to Calentertainment — your hub for movies, shows, games, and everything that makes us laugh and unwind together.
+<p style="text-align: center; margin: 0 auto 40px auto; max-width: 600px;">
+  Welcome to Calentertainment 🎬 — your hub for movies, shows, games, and everything that makes us laugh and unwind together.
 </p>
 {% endblock %}
+

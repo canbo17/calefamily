@@ -6,6 +6,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
 from flask_cors import CORS
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev‐only‐change‐me')
@@ -215,10 +216,10 @@ def register():
         admins = query_db("SELECT id FROM users WHERE is_admin = 1")
         new_user = {'pending_id': user_id, 'username': username, 'First': first, 'Last': last,  }
         for a in admins:
-            print(f"DEBUG register → notifying admin_id={a['id']} about new user {username}")
+            #print(f"DEBUG register → notifying admin_id={a['id']} about new user {username}")
             notify_user(
                 a['id'],new_user, notif_type='registration')
-        print("DEBUG register → done notify_user calls")
+        #print("DEBUG register → done notify_user calls")
         flash('Registration submitted and pending approval.', 'info')
         return redirect(url_for('login'))
 
@@ -314,9 +315,12 @@ def home():
 
     # 3) If logged in, open the DB and count unread messages
     user_id = session.get('user_id')
+    users = []
     if user_id:
         conn = sqlite3.connect('calefamily.db')
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+        # Count unread messages
         cursor.execute(
             """
             SELECT COUNT(*) 
@@ -328,15 +332,26 @@ def home():
             """,
             (user_id,)
         )
-        # fetchone()[0] yields the integer count
         unread_count = cursor.fetchone()[0] or 0
+
+        # Fetch all other users and their last_seen
+        cursor.execute("SELECT id, username, last_seen FROM users")
+        rows = cursor.fetchall()
+        for row in rows:
+            status = get_user_status(row['last_seen'])
+            users.append({'id': row['id'], 'username': row['username'], 'status': status})
         conn.close()
 
     # 4) Render with the unread_count in your context
+    for row in rows:
+        status = get_user_status(row['last_seen'])
+        print(f"[DEBUG] User {row['username']} last seen {row['last_seen']} → status {status}")
+        users.append({'id': row['id'], 'username': row['username'], 'status': status})
     return render_template(
         'home.html',
         subcales=subcales,
-        unread_count=unread_count
+        unread_count=unread_count,
+        users=users
     )
 
 # Subcale page
@@ -431,7 +446,14 @@ def subcale(subcale_name, **kwargs):
             with open("static/featured_fact.txt", "r", encoding="utf-8") as f:
                 kwargs['featured_fact'] = f.read()
         except FileNotFoundError:
-            kwargs['featured_fact'] = "Today's featured fact is not available."    
+            kwargs['featured_fact'] = "Today's featured fact is not available."
+
+    if subcale_name.lower() == 'calentertainment':
+        try:
+            with open("static/movie_plot.txt", "r", encoding="utf-8") as f:
+                kwargs['plot_movie'] = f.read()
+        except FileNotFoundError:
+            kwargs['plot_movie'] = "Today's movie is not available."    
 
     return render_template(template_file, 
                            subcale_name=subcale_name, 
@@ -451,14 +473,6 @@ def calecho():
 def calexplore():
     return subcale('calexplore')
 
-@app.route('/calentertainment')
-def calentertainment():
-    return subcale('calentertainment')
-
-@app.route('/calenrichment')
-def calenrichment():
-    return subcale('calenrichment')
-
 @app.route('/caleducation')
 def caleducation():
     try:
@@ -467,9 +481,27 @@ def caleducation():
     except FileNotFoundError:
         fact_text = "Today's featured fact is not available."
 
-    print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+    #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
 
     return subcale('caleducation', featured_fact=fact_text)
+
+
+@app.route('/calenrichment')
+def calenrichment():
+    return subcale('calenrichment')
+
+@app.route('/calentertainment')
+def calentertainment():
+    try:
+        with open("static/movie_plot.txt", "r", encoding="utf-8") as f:
+            plot_text = f.read()
+    except FileNotFoundError:
+        plot_text = "Today's movie is not available."
+
+    #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+
+    return subcale('calentertainment', plot_movie=plot_text)
+
 
 
 @app.route('/calespanol')
@@ -881,7 +913,7 @@ def inbox():
     conn.close()
 
     # (Optional) debug to terminal
-    print(f"DEBUG inbox: {len(messages)} messages →", messages)
+    #print(f"DEBUG inbox: {len(messages)} messages →", messages)
 
     # 4) Render template with a list of dicts
     return render_template(
@@ -1022,9 +1054,9 @@ def send_message():
     recipient_id = data.get('recipient_id')
     content = data.get('content')
 
-    print("DEBUG send_message → user_id:", user_id)
-    print("DEBUG send_message → recipient_id:", recipient_id)
-    print("DEBUG send_message → content:", content)
+    #print("DEBUG send_message → user_id:", user_id)
+    #print("DEBUG send_message → recipient_id:", recipient_id)
+    #print("DEBUG send_message → content:", content)
 
     if not user_id or not recipient_id or not content:
         return jsonify({'error': 'Missing data'}), 400
@@ -1044,9 +1076,52 @@ def get_users():
     user_id = session.get('user_id')  # current user
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, username FROM users WHERE id != ?", (user_id,))
-    users = [{'id': row[0], 'username': row[1]} for row in cur.fetchall()]
+    cur.execute("SELECT id, username, last_seen FROM users WHERE id != ?", (user_id,))
+    users = []
+    for row in cur.fetchall():
+        status = get_user_status(row['last_seen'])
+        users.append({'id': row['id'], 'username': row['username'], 'status': status})
     return jsonify(users)
+
+# Last Seen
+def get_user_status(last_seen):
+    if not last_seen:
+        return 'offline'
+    try:
+        last_seen_dt = datetime.fromisoformat(last_seen)
+        # Ensure last_seen_dt is timezone-aware; if not, assume UTC
+        if last_seen_dt.tzinfo is None:
+            last_seen_dt = last_seen_dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return 'offline'
+    now = datetime.now(timezone.utc)
+    delta = now - last_seen_dt
+    if delta < timedelta(seconds=60):
+        return 'online'
+    elif delta < timedelta(minutes=2):
+        return 'recently-online'
+    return 'offline'
+
+
+@app.route('/update_last_seen', methods=['POST'])
+def update_last_seen():
+    user_id = session.get('user_id')
+    if not user_id:
+        return '', 401
+
+    now = datetime.now(timezone.utc).isoformat()
+    #print(f"[DEBUG] Updating last_seen for user_id={user_id} → {now}")
+
+    db = get_db()
+    # Safety check: ensure user exists before updating
+    user = db.execute("SELECT id FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not user:
+        return '', 404
+
+    db.execute("UPDATE users SET last_seen = ? WHERE id = ?", (now, user_id))
+    db.commit()
+
+    return '', 204
 
 
 # migrations
@@ -1069,7 +1144,10 @@ def run_migrations(db_path='calefamily.db'):
         cur.execute("ALTER TABLE users ADD COLUMN is_approved INTEGER NOT NULL DEFAULT 0;")
     if 'is_admin' not in existing_users:
         cur.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0;")
-
+    if 'last_seen' not in existing_users:
+        cur.execute("ALTER TABLE users ADD COLUMN last_seen TEXT;")
+    #print("Columns in users table:", existing_users)
+    #print(">>> Using DB at:", os.path.abspath('calefamily.db'))
 
     # notifications table
     cur.execute("""

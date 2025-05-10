@@ -27,6 +27,26 @@
         align-self: flex-start;
         color: black;
       }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+
+      .status-online {
+        background-color: green;
+      }
+
+      .status-recently-online {
+        background-color: orange;
+      }
+
+      .status-offline {
+        background-color: red;
+      }
     </style>
 </head>
 <body>
@@ -76,92 +96,163 @@
     <textarea id="msg-input" placeholder="Type a message..."></textarea>
     <button onclick="sendMessage()">Send</button>
   </div>
-</div>
+  </div>
 
 <script>
-  let otherUserId = null;
-  let selectedUserDiv = null;
-  const currentUserId = {{ session['user_id'] }};
-
-  function sendMessage() {
-    const content = document.getElementById('msg-input').value;
-    if (!otherUserId || !content.trim()) return;
-
-    fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipient_id: otherUserId, content })
-    }).then(() => {
-      document.getElementById('msg-input').value = '';
-      fetchMessages();
+    let otherUserId = null;
+    let selectedUserDiv = null;
+    const currentUserId = {{ session['user_id'] }};
+  
+    function sendMessage() {
+      const content = document.getElementById('msg-input').value;
+      if (!otherUserId || !content.trim()) return;
+  
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipient_id: otherUserId, content })
+      }).then(() => {
+        document.getElementById('msg-input').value = '';
+        fetchMessages();
+      });
+    }
+  
+    function loadUsers() {
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(data => {
+          const userList = document.getElementById('user-list');
+          userList.innerHTML = '';
+          data.forEach(user => {
+            const div = document.createElement('div');
+            let statusClass = 'status-offline';
+            if (user.status === 'online') statusClass = 'status-online';
+            else if (user.status === 'recently-online') statusClass = 'status-recently-online';
+  
+            div.innerHTML = `<span class="status-indicator ${statusClass}"></span>${user.username}`;
+            
+            div.setAttribute('data-user-id', user.id);
+            div.setAttribute('data-base-name', user.username);
+            div.setAttribute('data-user-status', user.status);
+            div.style.cursor = 'pointer';
+            div.style.padding = '5px 0';
+            div.onclick = () => {
+              otherUserId = user.id;
+              fetchMessages();
+              if (selectedUserDiv) {
+                selectedUserDiv.classList.remove('selected-user');
+              }
+              div.classList.add('selected-user');
+              selectedUserDiv = div;
+            };
+            userList.appendChild(div);
+          });
+        });
+    }
+  
+    function fetchMessages() {
+      if (!otherUserId) return;
+      fetch(`/api/messages?other_id=${otherUserId}`)
+        .then(res => res.json())
+        .then(data => {
+          const messages = data.messages;
+          const unreadCounts = data.unread_counts;
+  
+          const box = document.getElementById('messages');
+          box.innerHTML = '';
+  
+          messages.forEach(msg => {
+            const el = document.createElement('div');
+            const isSender = msg.sender_id === currentUserId;
+            el.textContent = `${isSender ? 'You' : msg.sender_name}: ${msg.content}`;
+            el.className = isSender ? 'sender-message' : 'receiver-message';
+            box.appendChild(el);
+          });
+  
+        fetch('/api/users')
+          .then(res => res.json())
+          .then(users => {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            users.forEach(user => {
+              const div = document.createElement('div');
+              let statusClass = 'status-offline';
+              if (user.status === 'online') statusClass = 'status-online';
+              else if (user.status === 'recently-online') statusClass = 'status-recently-online';
+  
+              const unreadText = (user.id !== otherUserId && unreadCounts[user.id])
+                ? ` (${unreadCounts[user.id]})`
+                : '';
+  
+              div.innerHTML = `<span class="status-indicator ${statusClass}"></span>${user.username}${unreadText}`;
+              div.setAttribute('data-user-id', user.id);
+              div.setAttribute('data-base-name', user.username);
+              div.setAttribute('data-user-status', user.status);
+              div.style.cursor = 'pointer';
+              div.style.padding = '5px 0';
+              if (selectedUserDiv && selectedUserDiv.getAttribute('data-user-id') == user.id) {
+                div.classList.add('selected-user');
+                selectedUserDiv = div;
+              }
+              div.onclick = () => {
+                otherUserId = user.id;
+                fetchMessages();
+                if (selectedUserDiv) {
+                  selectedUserDiv.classList.remove('selected-user');
+                }
+                div.classList.add('selected-user');
+                selectedUserDiv = div;
+              };
+              userList.appendChild(div);
+            });
+          });
+  
+      box.scrollTop = box.scrollHeight;
     });
-  }
+    }
 
-  function loadUsers() {
-    fetch('/api/users')
-      .then(res => res.json())
-      .then(data => {
-        const userList = document.getElementById('user-list');
-        userList.innerHTML = '';
-        data.forEach(user => {
-          const div = document.createElement('div');
-          div.textContent = user.username;
-          div.setAttribute('data-user-id', user.id);
-          div.setAttribute('data-base-name', user.username);
-          div.style.cursor = 'pointer';
-          div.style.padding = '5px 0';
-          div.onclick = () => {
-            otherUserId = user.id;
-            fetchMessages();
-            if (selectedUserDiv) {
-              selectedUserDiv.classList.remove('selected-user');
-            }
-            div.classList.add('selected-user');
-            selectedUserDiv = div;
-          };
-          userList.appendChild(div);
+    function fetchUnreadCounts() {
+      fetch(`/api/messages?other_id=${otherUserId || ''}`)
+        .then(res => res.json())
+        .then(data => {
+          const unreadCounts = data.unread_counts;
+          document.querySelectorAll('#user-list div').forEach(div => {
+            const userId = parseInt(div.getAttribute('data-user-id'));
+            const baseName = div.getAttribute('data-base-name');
+            const status = div.getAttribute('data-user-status') || 'offline';
+
+            let statusClass = 'status-offline';
+            if (status === 'online') statusClass = 'status-online';
+            else if (status === 'recently-online') statusClass = 'status-recently-online';
+
+            const unreadText = (userId !== otherUserId && unreadCounts[userId])
+              ? ` (${unreadCounts[userId]})`
+              : '';
+
+            div.innerHTML = `<span class="status-indicator ${statusClass}"></span>${baseName}${unreadText}`;
+          });
         });
-      });
-  }
+    }
 
-  function fetchMessages() {
-    if (!otherUserId) return;
-    fetch(`/api/messages?other_id=${otherUserId}`)
-      .then(res => res.json())
-      .then(data => {
-        const messages = data.messages;
-        const unreadCounts = data.unread_counts;
+    // Ensure users are loaded and chat refreshes when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUsers();
+      setInterval(fetchMessages, 3000);
+      setInterval(fetchUnreadCounts, 2000); // updates unread badges regularly
+    });
+  </script>
 
-        const box = document.getElementById('messages');
-        box.innerHTML = '';
-
-        messages.forEach(msg => {
-          const el = document.createElement('div');
-          const isSender = msg.sender_id === currentUserId;
-          el.textContent = `${isSender ? 'You' : msg.sender_name}: ${msg.content}`;
-          el.className = isSender ? 'sender-message' : 'receiver-message';
-          box.appendChild(el);
-        });
-
-      // Update user list
-      document.querySelectorAll('#user-list div').forEach(div => {
-        const userId = parseInt(div.getAttribute('data-user-id'));
-        const baseName = div.getAttribute('data-base-name');
-        if (userId !== otherUserId && unreadCounts[userId]) {
-          div.textContent = `${baseName} (${unreadCounts[userId]})`;
-        } else {
-          div.textContent = baseName;
-        }
-      });
-
-    box.scrollTop = box.scrollHeight;
-  });
-  }
-  // Ensure users are loaded and chat refreshes when page loads
-  document.addEventListener('DOMContentLoaded', () => {
-    loadUsers();
-    setInterval(fetchMessages, 3000);
-  });
+<script>
+  setInterval(() => {
+    fetch('/update_last_seen', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(res => console.log("Pinged /update_last_seen:", res.status))
+      .catch(err => console.error("Ping failed:", err));
+  }, 5000);
 </script>
+
 
 </html>
