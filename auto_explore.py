@@ -1,4 +1,4 @@
-import requests, random, wikipedia, sqlite3 
+import requests, random, sqlite3 
 import os, folium, time
 from bs4 import BeautifulSoup
 from selenium import webdriver
