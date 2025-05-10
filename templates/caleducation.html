@@ -2,14 +2,12 @@
 
 {% block extra_content %}
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
-  <div>
+  <div class="subcale-grid">
     <img src="{{ url_for('static', filename='images/caleducation.jpg') }}" alt="Caleducation image" style="width: 300px; height: auto;">
-  </div>
-  <div style="width: 250px; white-space: pre-wrap; font-size: 1.2em; line-height: 1.5;">
+  <div class = "subcale-text">
     {{ featured_fact | safe }}
   </div>
-  <div>
-    <img src="{{ url_for('static', filename='images/featured_fact.jpg') }}" alt="Featured fact image" style="width: 300px; height: auto; border-radius: 8px;">
+    <img src="{{ url_for('static', filename='images/featured_fact.jpg') }}" alt="Featured fact image" style="width: 500px; height: auto; border-radius: 8px;">
   </div>
 </div>
 {% endblock %}

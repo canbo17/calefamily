@@ -1,0 +1,9 @@
+🌍 Country      : Chile
+🏛️ Capital      : Santiago
+🗣️ Languages    : Spanish
+💱 Currency     : Chilean peso ($)
+📍 Region       : Americas
+👥 Population   : 19,116,209
+🌐 Borders      : ARG, BOL, PER
+📌 Coordinates  : [-30.0, -71.0]
+🗺️ Google Maps  : https://goo.gl/maps/XboxyNHh2fAjCPNn9

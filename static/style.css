@@ -243,3 +243,36 @@ button:hover {
   .username {
     font-weight: 500;
   }
+
+  .subcale-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr; /* 3-column layout */
+  gap: 30px;
+  align-items: start;
+  justify-items: center;
+  margin-bottom: 30px;
+  }
+
+.subcale-grid img {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  border-radius: 8px;
+  padding: 20 20px;
+}
+
+.subcale-text {
+  white-space: pre-wrap;
+  font-size: 1.2em;
+  line-height: 1.5;
+  max-width: 400px;
+  text-align: left;
+}
+
+.subcale-text2 {
+  white-space: pre-wrap;
+  font-size: 1.2em;
+  line-height: 1.5;
+  max-width: 250px;
+  text-align: left;
+}

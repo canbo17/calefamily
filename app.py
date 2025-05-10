@@ -448,7 +448,15 @@ def subcale(subcale_name, **kwargs):
             with open("static/movie_plot.txt", "r", encoding="utf-8") as f:
                 kwargs['plot_movie'] = f.read()
         except FileNotFoundError:
-            kwargs['plot_movie'] = "Today's movie is not available."    
+            kwargs['plot_movie'] = "Today's movie is not available."   
+
+    if subcale_name.lower() == 'calexplore':
+        try:
+            with open("static/explore.txt", "r", encoding="utf-8") as f:
+                kwargs['featured_fact'] = f.read()
+        except FileNotFoundError:
+            kwargs['featured_fact'] = "Today's location is not available."   
+
 
     return render_template(template_file, 
                            subcale_name=subcale_name, 
@@ -466,7 +474,13 @@ def calecho():
 
 @app.route('/calexplore')
 def calexplore():
-    return subcale('calexplore')
+    try:
+        with open("static/explore.txt", "r", encoding="utf-8") as f:
+            fact_text = f.read()
+    except FileNotFoundError:
+        fact_text = "Today's location is not available."
+
+    return subcale('calexplore', featured_fact=fact_text)
 
 @app.route('/caleducation')
 def caleducation():
@@ -496,7 +510,6 @@ def calentertainment():
     #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
 
     return subcale('calentertainment', plot_movie=plot_text)
-
 
 
 @app.route('/calespanol')
