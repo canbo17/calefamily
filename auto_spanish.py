@@ -37,7 +37,7 @@ with open("static/spanish.txt", "w", encoding="utf-8") as f:
     f.write(f"📌 La palabra del día\n")
     f.write(f"(Word of the Day):\n\n") 
     f.write(f"🇪🇸 Spanish     : {word_es}\n")
-    f.write(f"🇺🇸 Translation : {word_en}\n\n")
+    f.write(f"🇺🇸 English     : {word_en}\n\n")
     f.write("📝 Example:\n")
     f.write(f"  🇪🇸 {example_es}\n")
     f.write(f"  🇺🇸 {example_en}\n")

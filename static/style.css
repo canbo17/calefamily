@@ -276,3 +276,7 @@ button:hover {
   max-width: 250px;
   text-align: left;
 }
+
+ul li {
+  margin-bottom: 5px; /* adjust this value as needed */
+}

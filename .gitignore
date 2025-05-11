@@ -10,3 +10,14 @@ __pycache__/
 calefamily.db
 #auto_post_fact.py
 #auto_movie_fetch.py
+
+# ignore cron updates
+static/explore.txt
+static/featured_fact.txt
+static/movie_plot.txt
+static/spanish.txt
+static/images/country_satellite_map.png
+static/images/featured_fact.jpg
+static/images/map_with_flag.png
+static/images/movie_of_the_day.jpg
+static/images/word_of_the_day.jpg
