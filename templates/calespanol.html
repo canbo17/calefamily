@@ -5,10 +5,31 @@
 <div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
   <div class="subcale-grid">
     <img src="{{ url_for('static', filename='images/calespanol.jpg') }}" alt="calespanol image" style="width: 350px; height: auto;">
-  <div class = "subcale-text">
+  <div class="subcale-text2">
     {{ spanish_word | safe }}
+
+    <div style="display: flex; flex-direction: row; gap: 12px; margin-top: 0;">
+      <button onclick="document.getElementById('audio-es').play()" style="cursor: pointer; background: none; border: none; display: flex; align-items: center; gap: 5px; line-height: 1; margin: 0;">
+        <span style="font-size: 1em;">🇪🇸</span>
+        <span style="font-size: 0.8em; color: black;">Pronunciación</span>
+      </button>
+
+      <button onclick="document.getElementById('audio-en').play()" style="cursor: pointer; background: none; border: none; display: flex; align-items: center; gap: 5px; line-height: 1; margin: 0;">
+        <span style="font-size: 1em;">🇺🇸</span>
+        <span style="font-size: 0.8em; color: black;">Pronunciation</span>
+      </button>
+
+      <button onclick="document.getElementById('audio-tr').play()" style="cursor: pointer; background: none; border: none; display: flex; align-items: center; gap: 5px; line-height: 1; margin: 0;">
+        <span style="font-size: 1em;">🇹🇷</span>
+        <span style="font-size: 0.8em; color: black;">Telaffuz</span>
+      </button>
+    </div>
+
+    <audio id="audio-es" src="{{ url_for('static', filename='sounds/spanish.mp3') }}"></audio>
+    <audio id="audio-en" src="{{ url_for('static', filename='sounds/english.mp3') }}"></audio>
+    <audio id="audio-tr" src="{{ url_for('static', filename='sounds/turkish.mp3') }}"></audio>
   </div>
-    <img src="{{ url_for('static', filename='images/word_of_the_day.jpg') }}" alt="Word of the day image" style="width: 350px; height: auto; border-radius: 8px;">
+    <img src="{{ url_for('static', filename='images/word_of_the_day.jpg') }}" alt="Word of the day image" style="width: 500px; height: auto; border-radius: 8px;">
   </div>
 </div>
 {% endblock %}

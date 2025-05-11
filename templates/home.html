@@ -55,17 +55,20 @@
     <div>🌟 Welcome to CaleFamily! 🌟</div>
     <div>
       {% if session.get('user_id') %}
-        <a href="{{ url_for('inbox') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none; margin-right:8px;">
+        <a href="{{ url_for('calengineers') }}" style="background-color: #ef476f; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🛠️ Calengineers</a>
+        <a href="{{ url_for('inbox') }}" style="background-color: #d577ea; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none; margin-right:8px;">
           📬 Inbox
           {% if unread_count > 0 %}
             <span style="background-color: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px;">
               {{ unread_count }}
             </span>
           {% endif %}
-        </a>
-        <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">
-          👤 Profile
-        </a>
+          <a href="{{ url_for('profile') }}" style="background-color: #06d6a0; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">
+            <img src="{{ url_for('static', filename='images/user_' ~ session['user_id'] ~ '.jpg') }}"
+               onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default.jpg') }}';"
+               alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; margin-right: 6px; vertical-align: middle;">
+            Profile
+          </a>
       {% endif %}
     </div>
   </div>
@@ -76,10 +79,9 @@
     <p><a href="{{ url_for('login') }}">Log In</a> or <a href="{{ url_for('register') }}">Register</a></p>
   {% endif %}
 
-  <h1>CALEFAMILY</h1>
-  <a href="{{ url_for('calengineers') }}" style="background-color: #ef476f; padding: 10px 15px; border-radius: 10px; color: white; text-decoration: none;">🛠️ Calengineers</a>
-
-  <ul>
+<div style="display: flex; align-items: flex-start; gap: 40px; margin-top: 20px;">
+  <ul style="list-style: none; padding: 0; margin: 0; min-width: 200px;">
+    <h1>CALEFAMILY</h1>
     {% for subcale in subcales %}
     <li>
       <a href="/subcale/{{ subcale.name | lower | replace('ñ', 'n') }}">
@@ -87,10 +89,32 @@
       </a>
     </li>
     {% endfor %}
-  </ul>
-</body>
+  </ul> 
 
-<div id="chat-box" style="display: flex; max-width: 800px; margin: 0 auto;">
+  <div class="tidy-blocks" style="flex-grow: 1;">
+  <div style="padding: 20px; width: 100%; max-width: 800px; border: 1px solid #ccc; border-radius: 10px;">
+  <h3 style="text-align:center;">🌍 Multi-language Translator</h3>
+  <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <label>🇺🇸 English</label><br>
+      <textarea id="englishBox" rows="4" cols="30"></textarea>
+    </div>
+    <div>
+      <label>🇪🇸 Español</label><br>
+      <textarea id="spanishBox" rows="4" cols="30"></textarea>
+    </div>
+    <div>
+      <label>🇹🇷 Türkçe</label><br>
+      <textarea id="turkishBox" rows="4" cols="30"></textarea>
+    </div>
+  </div>
+  <div style="text-align: center; margin-top: 10px;">
+    <button onclick="translateText()" style="margin-right: 10px;">Translate</button>
+    <button onclick="clearText()" style="background-color: orange; color: white;">Clear</button>
+  </div>
+  </div>
+
+  <div id="chat-box" style="display: flex; width: 100%; max-width: 800px; margin: 0;">
   <div id="user-list" style="width: 200px; border-right: 1px solid #ccc; padding: 10px; overflow-y: auto; max-height: 400px;"></div>
   <div style="flex: 1; display: flex; flex-direction: column;">
     <div id="messages" style="height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
@@ -98,6 +122,49 @@
     <button onclick="sendMessage()">Send</button>
   </div>
   </div>
+
+
+</div>
+</div>
+
+<script>
+  async function translateText() {
+    const en = document.getElementById('englishBox').value.trim();
+    const es = document.getElementById('spanishBox').value.trim();
+    const tr = document.getElementById('turkishBox').value.trim();
+
+    let sourceText, sourceLang;
+    if (en) {
+      sourceText = en;
+      sourceLang = 'en';
+    } else if (es) {
+      sourceText = es;
+      sourceLang = 'es';
+    } else if (tr) {
+      sourceText = tr;
+      sourceLang = 'tr';
+    } else {
+      alert("Please enter text in one of the boxes.");
+      return;
+    }
+
+    const targets = ['en', 'es', 'tr'].filter(lang => lang !== sourceLang);
+    for (const targetLang of targets) {
+      const res = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=" +
+        sourceLang + "&tl=" + targetLang + "&q=" + encodeURIComponent(sourceText));
+      const data = await res.json();
+      const translatedText = data[0].map(item => item[0]).join(" ");
+      if (targetLang === 'en') document.getElementById('englishBox').value = translatedText;
+      if (targetLang === 'es') document.getElementById('spanishBox').value = translatedText;
+      if (targetLang === 'tr') document.getElementById('turkishBox').value = translatedText;
+    }
+  }
+  function clearText() {
+    document.getElementById('englishBox').value = '';
+    document.getElementById('spanishBox').value = '';
+    document.getElementById('turkishBox').value = '';
+  }
+</script>
 
 <script>
     let otherUserId = null;
@@ -254,6 +321,5 @@
       .catch(err => console.error("Ping failed:", err));
   }, 5000);
 </script>
-
 
 </html>

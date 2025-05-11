@@ -786,9 +786,32 @@ def calengineers():
     c = conn.cursor()
     c.execute('SELECT id, username FROM users')
     users = c.fetchall()
+
+    # Default unread‑message count
+    unread_count = 0
+
+    # 3) If logged in, open the DB and count unread messages
+    user_id = session.get('user_id')
+    if user_id:
+        conn = sqlite3.connect('calefamily.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) 
+              FROM messages 
+             WHERE recipient_id = ? 
+               AND is_read      = 0 
+               AND deleted      = 0
+               AND message_type = 'mail'
+            """,
+            (user_id,)
+        )
+        # fetchone()[0] yields the integer count
+        unread_count = cursor.fetchone()[0] or 0
+
     conn.close()
 
-    return render_template('calengineers.html', users=users)
+    return render_template('calengineers.html', users=users, unread_count=unread_count)
 
 @app.route('/user_profile/<int:user_id>')
 def user_profile(user_id):
@@ -856,12 +879,35 @@ def send_messages(recipient_id):
         recipient_username = recipient[0]
     else:
         return "Recipient not found", 404
+    
+    # Default unread‑message count
+    unread_count = 0
+
+    # 3) If logged in, open the DB and count unread messages
+    user_id = session.get('user_id')
+    if user_id:
+        conn = sqlite3.connect('calefamily.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT COUNT(*) 
+            FROM messages 
+            WHERE recipient_id = ? 
+            AND is_read      = 0 
+            AND deleted      = 0
+            AND message_type = 'mail'
+            """,
+            (user_id,)
+        )
+        # fetchone()[0] yields the integer count
+        unread_count = cursor.fetchone()[0] or 0
 
     return render_template('send_messages.html',
                            messages=messages,
                            recipient=recipient_username,
                            recipient_id=recipient_id,
-                           original_message_content=original_message_content)
+                           original_message_content=original_message_content,
+                           unread_count=unread_count)
 
 @app.route('/sent_messages')
 def sent_messages():

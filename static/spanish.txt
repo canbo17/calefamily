@@ -1,8 +1,15 @@
-📌 La palabra del día
-(Word of the Day):
-🇪🇸 Spanish     : el ocio
-🇺🇸 Translation : leisure
+------------------------------
+🇪🇸 La palabra del día  
+🇺🇸 Word of the Day     
+🇹🇷 Günün kelimesi      
 
-📝 Example:
-  🇪🇸 Es importante dejar tiempo para el ocio.
-  🇺🇸 It is important to leave time for leisure.
+------------------------------
+🇪🇸  Español    : embarazada
+🇺🇸  English    : pregnant
+🇹🇷  Türkçe     : hamile
+
+------------------------------
+📝 Ejemplo\Example:\Örnek 
+  🇪🇸 Carolina está embarazada de gemelos.
+  🇺🇸 Carolina is pregnant with twins.
+  🇹🇷 Carolina ikizlere hamile.
