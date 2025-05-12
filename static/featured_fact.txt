@@ -1,10 +1,17 @@
-Barnegat Lighthouse (or Barnegat Light, locally nicknamed Old Barney) is a historic lighthouse located in Barnegat Lighthouse State Park on the northern tip of Long Beach Island, in the borough of Barnegat Light, Ocean County, New Jersey, United States, on the south side of Barnegat Inlet.
+🧠 Fact of the Day:
+
+Hirtotyphis is a genus of sea snails, marine gastropod mollusks in the family Muricidae, the murex snails or rock snails.
 
 
-== History ==
+== Species ==
+† Hirtotyphis aoteanus (Vella, 1961)
+† Hirtotyphis horridus (Brocchi, 1814)
+† Hirtotyphis panoplus (P. A. Maxwell, 1971)
+Hirtotyphis trispinosus Houart, 1991
 
 
-=== 19th century ===
-The development of the original lighthouse began in June 1834 with the appropriation of $6,000 from Congress.
+== References ==
 
-📸 Fact from Wikipedia: https://en.wikipedia.org/wiki/Barnegat_Lighthouse
+Houart, R, Buge, B. & Zuccon, D. (2021).
+
+📸 Fact from Wikipedia: https://en.wikipedia.org/wiki/Hirtotyphis

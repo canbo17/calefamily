@@ -1,7 +1,6 @@
 {% extends "subcale.html" %}
 
 {% block extra_content %}
-<meta name="viewport" content="width=device-width, initial-scale=0.3">
 <style>
   #radio-widget button.active {
     background-color: #06d6a0;
@@ -9,28 +8,48 @@
     font-weight: bold;
   }
 </style>
-<div style="display: flex; justify-content: center; align-items: flex-start; gap: 20px;">
-  <!-- Centered image (like caleducation) -->
-  <div style="text-align: center;">
-    <img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="Calecho image" style="width: 300px; height: auto; border-radius: 8px;">
-  </div>
-
-  <!-- Radio widget floats to the right -->
-  <div id="radio-widget" style="width: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
-    <h3>🎧 Calecho Radio</h3>
-    <div style="margin-bottom: 10px;">
-      <button onclick="setStation('latin')">Latin</button>
-      <button onclick="setStation('pop')">Pop</button>
-      <button onclick="setStation('classic')">Classic</button>
-      <button onclick="setStation('turk')">Turk</button>
-      <button onclick="setStation('rb')">R&amp;B</button>
+<meta name="viewport" content="width=device-width, initial-scale=0.3">
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
+  <div class="subcale-grid">
+    <!-- Calecho photo (left column) -->
+    <div>
+      <img src="{{ url_for('static', filename='images/calecho.jpg') }}" alt="calecho image" style="width: 350px; height: auto;">
     </div>
-    <audio id="radio-player" controls style="width: 100%;">
-      <source id="radio-source" src="" type="audio/mpeg">
-      Your browser does not support the audio element.
-    </audio>
+
+    <!-- Music text and radio (center column) -->
+    <div>
+      <div class="subcale-text">
+        {{ music_text | safe }}
+      </div>
+      <div id="radio-widget" >
+        <h3>🎧 Calecho Radio</h3>
+        <div style="margin-bottom: 10px;">
+          <button onclick="setStation('latin')">Latin</button>
+          <button onclick="setStation('pop')">Pop</button>
+          <button onclick="setStation('classic')">Classic</button>
+          <button onclick="setStation('turk')">Turk</button>
+          <button onclick="setStation('rb')">R&amp;B</button>
+        </div>
+        <audio id="radio-player" controls style="width: 100%;">
+          <source id="radio-source" src="" type="audio/mpeg">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+    </div>
+
+    <!-- Music of the day photo (right column) -->
+    <div>
+      <img src="{{ url_for('static', filename='images/music_of_the_day.jpg') }}" alt="Music of the day image" style="width: 350px; height: auto; border-radius: 8px;">
+    </div>
+
   </div>
 </div>
+{% endblock %}
+
+{% block body_text %}
+<p style="text-align: center; margin: 0 auto 40px auto; max-width: 600px;">
+  🎧 Welcome to Calecho — the community's radio space for sharing music, rhythms, and cultural vibes from around the world!
+</p>
 {% endblock %}
 
 {% block scripts %}
@@ -59,11 +78,3 @@
     }
 </script>
 {% endblock %}
-
-{% block body_text %}
-<p style="text-align: center; margin: 20px auto; max-width: 600px;">
-  🎧 Welcome to Calecho — the community's radio space for sharing music, rhythms, and cultural vibes from around the world!
-</p>
-{% endblock %}
-
-

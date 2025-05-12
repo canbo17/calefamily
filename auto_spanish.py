@@ -43,7 +43,7 @@ tts_es.save("static/sounds/spanish.mp3")
 
 tts_tr = gTTS(text=word_tr, lang='tr')
 tts_tr.save("static/sounds/turkish.mp3")
-
+credit = "📸 Spanish from https://www.spanishdict.com/wordoftheday"
 
 # Download the image
 os.makedirs('static/images', exist_ok=True)
@@ -57,25 +57,25 @@ with open("static/spanish.txt", "w", encoding="utf-8") as f:
     f.write(f"-" * 30 + "\n")
     f.write(f"🇪🇸 La palabra del día  \n")
     f.write(f"🇺🇸 Word of the Day     \n")
-    f.write(f"🇹🇷 Günün kelimesi      \n\n") 
+    f.write(f"🇹🇷 Günün kelimesi      \n") 
     f.write("-" * 30 + "\n")
     # Aligned rows
     f.write(f"🇪🇸  {'Español':<10} : {word_es}\n")
     f.write(f"🇺🇸  {'English':<10} : {word_en}\n")
-    f.write(f"🇹🇷  {'Türkçe':<10} : {word_tr}\n\n")
+    f.write(f"🇹🇷  {'Türkçe':<10} : {word_tr}\n")
     f.write("-" * 30 + "\n")
     # Examples
     f.write("📝 Ejemplo\Example:\Örnek \n")
     f.write(f"  🇪🇸 {example_es}\n")
     f.write(f"  🇺🇸 {example_en}\n")
-    f.write(f"  🇹🇷 {example_tr}\n")
+    f.write(f"  🇹🇷 {example_tr}\n\n")
+    f.write(f"Credit: {credit}")
  
 # Save to your database
 conn = sqlite3.connect('calefamily.db')
 cur = conn.cursor()
 
 # Use a system user ID for auto-posts (e.g. 1)
-credit = "https://www.spanishdict.com/wordoftheday"
 user_id = 1
 subcale = 'calespanol'
 content = f"{word_es}\n\n📸 {credit}"

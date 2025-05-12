@@ -27,7 +27,7 @@ try:
             handler.write(img_data)
 
     # Write summary and credit to a text file
-    fact_text = f"{summary}\n\n📸 {credit}"
+    fact_text = f"🧠 Fact of the Day:\n\n{summary}\n\n📸 {credit}"
     with open(os.path.join('static', 'featured_fact.txt'), 'w') as f:
         f.write(fact_text)
 

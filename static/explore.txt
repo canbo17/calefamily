@@ -1,9 +1,13 @@
-🌍 Country      : Laos
-🏛️ Capital      : Vientiane
-🗣️ Languages    : Lao
-💱 Currency     : Lao kip (₭)
-📍 Region       : Asia
-👥 Population   : 7,275,556
-🌐 Borders      : MMR, KHM, CHN, THA, VNM
-📌 Coordinates  : [18.0, 105.0]
-🗺️ Google Maps  : https://goo.gl/maps/F3asVB7sRKgSnwbE7
+------------------------------
+Country of the day
+🌍 Country      : Dominica
+🏛️ Capital      : Roseau
+🗣️ Languages    : English
+💱 Currency     : Eastern Caribbean dollar ($)
+📍 Region       : Americas
+👥 Population   : 71,991
+🌐 Borders      : None
+📌 Coordinates  : [15.41666666, -61.33333333]
+🗺️ Google Maps  : https://goo.gl/maps/HSKdHYpFC8oHHuyV7
+
+📸 Information from https://restcountries.com/

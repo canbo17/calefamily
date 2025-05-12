@@ -462,7 +462,19 @@ def subcale(subcale_name, **kwargs):
             with open("static/spanish.txt", "r", encoding="utf-8") as f:
                 kwargs['spanish_word'] = f.read()
         except FileNotFoundError:
-            kwargs['spanish_word'] = "Today's word is not available."      
+            kwargs['spanish_word'] = "Today's word is not available."
+    if subcale_name.lower() == 'calenrichment':
+        try:
+            with open("static/art.txt", "r", encoding="utf-8") as f:
+                kwargs['art_text'] = f.read()
+        except FileNotFoundError:
+            kwargs['art_text'] = "Today's art is not available."      
+    if subcale_name.lower() == 'calecho':
+        try:
+            with open("static/music.txt", "r", encoding="utf-8") as f:
+                kwargs['music_text'] = f.read()
+        except FileNotFoundError:
+            kwargs['art_text'] = "Today's album is not available."
 
     return render_template(template_file, 
                            subcale_name=subcale_name, 
@@ -476,7 +488,15 @@ def subcale(subcale_name, **kwargs):
 
 @app.route('/calecho')
 def calecho():
-    return subcale('calecho')
+    try:
+        with open("static/music.txt", "r", encoding="utf-8") as f:
+            music_text = f.read()
+    except FileNotFoundError:
+        music_text = "Today's album is not available."
+
+    #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+
+    return subcale('calecho', music_text=music_text)    
 
 @app.route('/calexplore')
 def calexplore():
@@ -502,7 +522,15 @@ def caleducation():
 
 @app.route('/calenrichment')
 def calenrichment():
-    return subcale('calenrichment')
+    try:
+        with open("static/art.txt", "r", encoding="utf-8") as f:
+            art_text = f.read()
+    except FileNotFoundError:
+        art_text = "Today's word is not available."
+
+    #print("📘 DEBUG featured_fact preview:", fact_text[:150])  # print a preview
+
+    return subcale('calenrichment', art_text=art_text)
 
 @app.route('/calentertainment')
 def calentertainment():

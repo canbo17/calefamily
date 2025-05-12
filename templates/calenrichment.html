@@ -2,13 +2,19 @@
 
 {% block extra_content %}
 <meta name="viewport" content="width=device-width, initial-scale=0.3">
-<div style="text-align: center;">
-  <img src="{{ url_for('static', filename='images/calenrichment.jpg') }}" alt="calenrichment image" style="width: 300px; height: auto;">
+<div style="display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-bottom: 30px;">
+  <div class="subcale-grid">
+    <img src="{{ url_for('static', filename='images/calenrichment.jpg') }}" alt="calenrichment image" style="width: 350px; height: auto;">
+  <div class = "subcale-text">
+    {{ art_text | safe }}
+  </div>
+    <img src="{{ url_for('static', filename='images/art_of_the_day.jpg') }}" alt="Art fact image" style="width: 350px; height: auto; border-radius: 8px;">
+  </div>
 </div>
 {% endblock %}
 
 {% block body_text %}
-<p style="text-align: center; margin: 20px auto; max-width: 600px;">
+<p style="text-align: center; margin: 0 auto 40px auto; max-width: 600px;">
   ✨ Welcome to Calenrichment — a space to grow, learn new skills, and dive into hobbies that enrich our daily lives.
 </p>
 {% endblock %}

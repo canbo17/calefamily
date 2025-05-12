@@ -25,13 +25,6 @@ ia = IMDb()
 movie = ia.search_movie(str(selected_movie))
 full_info = ia.get_movie(movie[0].movieID)
 
-print(f"Title: {full_info['title']}")
-print(f"Year: {full_info.get('year')}")
-print(f"Genres: {', '.join(full_info.get('genres', []))}")
-print(f"Plot: {full_info.get('plot')[0]}")
-print(f"Directors: {', '.join([d['name'] for d in full_info.get('directors', [])])}")
-print(f"Cover URL: {full_info.get('cover url')}")
-
 page_url = f"https://www.imdb.com/title/tt{movie[0].movieID}/"
 credit = f"Movie details are from IMDB: {page_url}"
 print(credit)
@@ -47,7 +40,14 @@ print(poster_url)
 
 movie_plot = f"{plot}\n\n🎬 {credit}"
 with open(os.path.join('static', 'movie_plot.txt'), 'w') as f:
-    f.write(movie_plot)
+    f.write(f"-" * 30 + "\n")
+    f.write(f"Movie of the day\n")
+    f.write(f"Title: {full_info['title']}\n")
+    f.write(f"Year: {full_info.get('year')}\n")
+    f.write(f"Genres: {', '.join(full_info.get('genres', []))}\n")
+    f.write(f"Plot: {full_info.get('plot')[0]}\n")
+    f.write(f"Directors: {', '.join([d['name'] for d in full_info.get('directors', [])])}\n")
+    f.write(f"Plot: {movie_plot}")
 
 if poster_url:
     headers = {'User-Agent': 'Mozilla/5.0'}

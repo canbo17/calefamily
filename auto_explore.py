@@ -22,11 +22,14 @@ borders = ', '.join(random_country.get('borders', [])) or 'None'
 latlng = random_country.get('latlng', ['N/A', 'N/A'])
 flag = random_country.get('flags', {}).get('png', 'N/A')
 google_maps = random_country.get('maps', {}).get('googleMaps', 'N/A')
+credit = "📸 Information from https://restcountries.com/"
 
 #print(name)
 
 # Write results to a file
 with open("static/explore.txt", "w", encoding="utf-8") as f:
+    f.write(f"-" * 30 + "\n")
+    f.write(f"Country of the day\n")
     f.write(f"🌍 Country      : {name}\n")
     f.write(f"🏛️ Capital      : {capital}\n")
     f.write(f"🗣️ Languages    : {languages}\n")
@@ -35,7 +38,8 @@ with open("static/explore.txt", "w", encoding="utf-8") as f:
     f.write(f"👥 Population   : {population}\n")
     f.write(f"🌐 Borders      : {borders}\n")
     f.write(f"📌 Coordinates  : {latlng}\n")
-    f.write(f"🗺️ Google Maps  : {google_maps}\n")
+    f.write(f"🗺️ Google Maps  : {google_maps}\n\n")
+    f.write(f"{credit}")
     #f.write(f"🚩 Flag Image URL: {flag}")
 
 # STEP 2) Create map with borders as a PNG file
@@ -128,7 +132,6 @@ conn = sqlite3.connect('calefamily.db')
 cur = conn.cursor()
 
 # Use a system user ID for auto-posts (e.g. 1)
-credit = "https://restcountries.com/"
 user_id = 1
 subcale = 'calexplore'
 content = f"{name}\n\n📸 {credit}"
